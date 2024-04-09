@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Fushigi.ui
+﻿namespace Fushigi.ui
 {
     public class UndoHandler
     {

@@ -1,3 +1,4 @@
+using Fasterflect;
 using Fushigi.actor_pack.components;
 using Fushigi.Bfres;
 using Fushigi.Byml.Serializer;
@@ -7,20 +8,17 @@ using Fushigi.gl;
 using Fushigi.gl.Bfres;
 using Fushigi.gl.Bfres.AreaData;
 using Fushigi.param;
+using Fushigi.ui.undo;
 using Fushigi.util;
 using ImGuiNET;
 using Silk.NET.OpenGL;
+using System;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
-using System.Dynamic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System.Xml;
 using static Fushigi.course.CourseUnit;
-using Fushigi.ui.undo;
 using Vector3 = System.Numerics.Vector3;
-using Fasterflect;
 
 namespace Fushigi.ui.widgets
 {
@@ -69,6 +67,8 @@ namespace Fushigi.ui.widgets
 
     internal class LevelViewport(CourseArea area, GL gl, CourseAreaScene areaScene)
     {
+        public static object?[] CopiedObjects = [];
+
         public void PreventFurtherRendering() => mIsNoMoreRendering = true;
         private bool mIsNoMoreRendering = false;
 
@@ -110,8 +110,14 @@ namespace Fushigi.ui.widgets
         //TODO make this an ISceneObject? as soon as there's a SceneObj class for each course object
         private object? mHoveredObject;
 
+        Vector2? mMultiSelectStartPos;
+        Vector2? mMultiSelectCurrentPos;
+        bool mMultiSelecting = false;
+
         public static uint GridColor = 0x77_FF_FF_FF;
         public static float GridLineThickness = 1.5f;
+        public static uint MultiSelectBoxColor = 0x90_00_00_FF;
+        public static float MultiSelectBoxThickness = 3f;
 
         private (string message, Predicate<object?> predicate,
             TaskCompletionSource<(object? picked, KeyboardModifier modifiers)> promise)? 
@@ -706,12 +712,63 @@ namespace Fushigi.ui.widgets
                 mEditContext.Redo();
             }
 
+            CourseActor[] selectedActors = areaScene.EditContext.GetSelectedObjects<CourseActor>().ToArray();
 
+            if (selectedActors.Length != 0 &&
+                ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd)
+            {
+                CopiedObjects = new CourseActor[selectedActors.Length];
+                for (int i = 0; i < CopiedObjects.Length; i++)
+                    CopiedObjects[i] = selectedActors[i].Clone();
+            }
+            if (CopiedObjects.Length != 0 &&
+                ImGui.IsKeyPressed(ImGuiKey.V) && modifiers == KeyboardModifier.CtrlCmd)
+            {
+                DoPaste();
+            }
 
             if (ImGui.IsWindowFocused())
                 InteractionWithFocus(modifiers);
 
             ImGui.PopClipRect();
+        }
+
+        private async Task DoPaste()
+        {
+            if (CopiedObjects.Length == 0) return;
+
+            Vector3? _pos;
+            KeyboardModifier modifier;
+            CourseActor[]? actors = CopiedObjects as CourseActor[];
+            if (actors == null) return;
+
+            string msg;
+            if (actors.Length == 1)
+                msg = $"Placing actor {actors[0].mPackName}";
+            else
+                msg = $"Placing {actors.Length} actors";
+            msg += " -- Hold SHIFT to place multiple";
+
+            (_pos, modifier) = await PickPosition(msg, actors[0].mLayer);
+            if (_pos == null) return;
+
+            foreach (var actor in actors)
+            {
+                Vector3 pos = _pos.Value;
+                pos = new Vector3((float)Math.Round(pos.X, 0), (float)Math.Round(pos.Y, 0), actor.mTranslation.Z);
+
+                CourseActor newActor = actor.Clone();
+                newActor.mTranslation = pos;
+
+                areaScene.EditContext.AddActor(newActor);
+            }
+
+            areaScene.EditContext.Select(actors);
+
+            if (modifier == KeyboardModifier.Shift)
+            {
+                DoPaste();
+            }
         }
 
         void InteractionWithFocus(KeyboardModifier modifiers)
@@ -762,9 +819,46 @@ namespace Fushigi.ui.widgets
           
             if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !isPanGesture)
             {
-                if (mEditContext.IsAnySelected<CourseActor>())
+                if (mMultiSelectStartPos != null)
                 {
-                    foreach(CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
+                    mMultiSelectCurrentPos = ImGui.GetMousePos();
+                    mMultiSelecting = true;
+
+                    Vector3 startPosWorldStart = ScreenToWorld(mMultiSelectStartPos.Value);
+                    Vector3 currentPosWorldStart = ScreenToWorld(mMultiSelectCurrentPos.Value);
+
+                    Vector3 startPosWorld = startPosWorldStart;
+                    Vector3 currentPosWorld = currentPosWorldStart;
+
+                    if (currentPosWorldStart.X < startPosWorldStart.X)
+                    {
+                        currentPosWorld.X = startPosWorldStart.X;
+                        startPosWorld.X = currentPosWorldStart.X;
+                    }
+                    if (currentPosWorldStart.Y < startPosWorldStart.Y)
+                    {
+                        currentPosWorld.Y = startPosWorldStart.Y;
+                        startPosWorld.Y = currentPosWorldStart.Y;
+                    }
+
+                    CourseActor[] actors = [.. mArea.GetActors()];
+                    foreach (var actor in actors)
+                    {
+                        float actorX = actor.mTranslation.X;
+                        float actorY = actor.mTranslation.Y;
+
+                        if (actorX > startPosWorld.X && actorX < currentPosWorld.X && actorY > startPosWorld.Y && actorY < currentPosWorld.Y)
+                        {
+                            mEditContext.Select(actor);
+                        } else
+                        {
+                            mEditContext.Deselect(actor);
+                        }
+                    }
+                }
+                else if (!mMultiSelecting && mEditContext.IsAnySelected<CourseActor>())
+                {
+                    foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
                     {
                         Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
                         posVec -= ScreenToWorld(ImGui.GetIO().MouseClickedPos[0]) - actor.mStartingTrans;
@@ -782,7 +876,7 @@ namespace Fushigi.ui.widgets
                         }
                     }
                 }
-                if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? rail))
+                else if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? rail))
                 {
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
 
@@ -798,7 +892,7 @@ namespace Fushigi.ui.widgets
                         rail.mTranslate = posVec;
                     }
                 }
-                if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPointControl? railCont))
+                else if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPointControl? railCont))
                 {
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
 
@@ -839,11 +933,19 @@ namespace Fushigi.ui.widgets
                 }
             }
 
-            if (ImGui.IsMouseDown(0) && !isPanGesture)
-                dragRelease = ImGui.IsMouseDragging(0);
+            if (ImGui.IsMouseDown(0))
+            {
+                if (!ImGui.IsMouseDragging(0))
+                    mMultiSelectStartPos = ImGui.GetMousePos();
+                if (!isPanGesture)
+                    dragRelease = ImGui.IsMouseDragging(0);
+            }
 
             if(ImGui.IsMouseReleased(0))
             {
+                if (mMultiSelecting)
+                    mMultiSelecting = false;
+
                 if(mHoveredObject != null && 
                 mHoveredObject is CourseActor &&
                 !dragRelease)
@@ -1158,6 +1260,9 @@ namespace Fushigi.ui.widgets
                         }
                     }
                 }
+
+                if (mMultiSelecting && mMultiSelectStartPos != null && mMultiSelectCurrentPos != null)
+                    mDrawList.AddRect(mMultiSelectStartPos.Value, mMultiSelectCurrentPos.Value, MultiSelectBoxColor, 2f, ImDrawFlags.RoundCornersAll, MultiSelectBoxThickness);
             }
 
             foreach (CourseActor actor in mArea.GetActors())

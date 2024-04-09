@@ -1,15 +1,8 @@
 ﻿using Fushigi.Byml;
-using Fushigi.Byml.Serializer;
+using Fushigi.Byml.Writer;
 using Fushigi.param;
 using Fushigi.util;
-using Silk.NET.Core;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fushigi.course
 {
@@ -222,6 +215,29 @@ namespace Fushigi.course
             table.AddNode(BymlNodeId.Array, translateNode, "Translate");
 
             return table;
+        }
+
+        public CourseActor Clone()
+        {
+            CourseActor cloned = new(mPackName, mAreaHash, mLayer)
+            {
+                mPackName = mPackName,
+                mName = mName + "Copy",
+                mLayer = mLayer,
+                mWonderView = mWonderView,
+                wonderVisible = wonderVisible,
+                mStartingTrans = mStartingTrans,
+                mTranslation = mTranslation,
+                mRotation = mRotation
+            };
+            cloned.mStartingTrans = mStartingTrans;
+            cloned.mAreaHash = mAreaHash;
+            cloned.mHash = (ulong)(new Random().NextDouble() * ulong.MaxValue);
+            cloned.mActorParameters = mActorParameters;
+            cloned.mSystemParameters = mSystemParameters;
+            cloned.mActorPack = mActorPack;
+
+            return cloned;
         }
 
         public string mPackName;

@@ -1,17 +1,6 @@
-﻿
-using Silk.NET.Windowing;
-using Silk.NET.OpenGL;
-using ImGuiNET;
-using Fushigi.util;
-using Fushigi.windowing;
+﻿using Fushigi.util;
 using Fushigi.Byml;
-using Fushigi.Byml.Writer;
-using Fushigi.Byml.Writer.Primitives;
-using Fushigi;
-using Fushigi.course;
 using Fushigi.rstb;
-using Fushigi.ui.widgets;
-using System.IO;
 
 namespace Fushigi.course
 {
