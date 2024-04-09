@@ -1,6 +1,7 @@
 using Fasterflect;
 using Fushigi.actor_pack.components;
 using Fushigi.Bfres;
+using Fushigi.Byml;
 using Fushigi.Byml.Serializer;
 using Fushigi.course;
 using Fushigi.course.distance_view;
@@ -12,11 +13,9 @@ using Fushigi.ui.undo;
 using Fushigi.util;
 using ImGuiNET;
 using Silk.NET.OpenGL;
-using System;
 using System.Data;
 using System.Drawing;
 using System.Numerics;
-using System.Xml;
 using static Fushigi.course.CourseUnit;
 using Vector3 = System.Numerics.Vector3;
 
@@ -722,26 +721,46 @@ namespace Fushigi.ui.widgets
                 for (int i = 0; i < CopiedObjects.Length; i++)
                     CopiedObjects[i] = selectedActors[i].Clone();
             }
+            bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
+            bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
             if (CopiedObjects.Length != 0 &&
-                ImGui.IsKeyPressed(ImGuiKey.V) && modifiers == KeyboardModifier.CtrlCmd)
+                ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift)
             {
-                DoPaste();
+                DoPaste(freshCopy: ctrlAndShift);
             }
 
             if (ImGui.IsWindowFocused())
                 InteractionWithFocus(modifiers);
 
+            if (hoveredActor != null && ImGui.IsMouseClicked(0) && ctrlOrCtrlShift)
+                DoImmediatePaste(freshCopy: ctrlAndShift);
+
             ImGui.PopClipRect();
         }
 
-        private async Task DoPaste()
+        private void DoImmediatePaste(bool freshCopy)
+        {
+            if (mHoveredObject is not CourseActor actor) return;
+
+            CourseActor newActor;
+            if (freshCopy)
+                newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
+            else
+                newActor = actor.Clone();
+            newActor.mStartingTrans = actor.mStartingTrans;
+            mEditContext.AddActor(newActor);
+
+            mEditContext.DeselectAll();
+            mEditContext.Select(newActor);
+        }
+
+        private async Task DoPaste(bool freshCopy)
         {
             if (CopiedObjects.Length == 0) return;
 
             Vector3? _pos;
             KeyboardModifier modifier;
-            CourseActor[]? actors = CopiedObjects as CourseActor[];
-            if (actors == null) return;
+            if (CopiedObjects is not CourseActor[] actors) return;
 
             string msg;
             if (actors.Length == 1)
@@ -758,17 +777,22 @@ namespace Fushigi.ui.widgets
                 Vector3 pos = _pos.Value;
                 pos = new Vector3((float)Math.Round(pos.X, 0), (float)Math.Round(pos.Y, 0), actor.mTranslation.Z);
 
-                CourseActor newActor = actor.Clone();
+                CourseActor newActor;
+                if (freshCopy)
+                    newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
+                else
+                    newActor = actor.Clone();
+
                 newActor.mTranslation = pos;
 
-                areaScene.EditContext.AddActor(newActor);
+                mEditContext.AddActor(newActor);
             }
 
-            areaScene.EditContext.Select(actors);
+            mEditContext.Select(actors);
 
             if (modifier == KeyboardModifier.Shift)
             {
-                DoPaste();
+                DoPaste(freshCopy);
             }
         }
 
@@ -820,16 +844,17 @@ namespace Fushigi.ui.widgets
 
             if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !isPanGesture)
             {
-                if (mMultiSelectStartPos != null && !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseUnit>()))
+                if (mMultiSelectStartPos != null &&
+                    mEditorMode == EditorMode.Actors &&
+                    !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseUnit>()
+                    || mEditContext.IsAnySelected<BGUnitRail>() || mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
                 {
                     DoDrag();
                     void DoDrag()
                     {
-                        if ((mEditContext.IsAnySelected<CourseActor>())
-                            && mMultiSelectEnded)
-                        {
+                        if (mEditContext.IsAnySelected<CourseActor>() && mMultiSelectEnded)
                             return;
-                        }
+
                         mMultiSelectCurrentPos = ImGui.GetMousePos();
                         mMultiSelecting = true;
                         mMultiSelectEnded = false;
@@ -862,12 +887,9 @@ namespace Fushigi.ui.widgets
                             float actorY = actor.mTranslation.Y;
 
                             if (actorX > startPosWorld.X && actorX < currentPosWorld.X && actorY > startPosWorld.Y && actorY < currentPosWorld.Y)
-                            {
                                 mEditContext.Select(actor);
-                            } else
-                            {
+                            else
                                 mEditContext.Deselect(actor);
-                            }
                         }
                     }
                 }
