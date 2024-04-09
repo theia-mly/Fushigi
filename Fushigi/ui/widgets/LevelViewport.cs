@@ -106,6 +106,8 @@ namespace Fushigi.ui.widgets
 
         DistantViewManager DistantViewScrollManager = new DistantViewManager(area);
 
+        public bool ScreenshotMode;
+
         //TODO make this an ISceneObject? as soon as there's a SceneObj class for each course object
         private object? mHoveredObject;
 
@@ -1121,13 +1123,16 @@ namespace Fushigi.ui.widgets
             Vector3? newHoveredPoint = null;
             object? newHoveredObject = null;
 
-            areaScene.ForEach<IViewportDrawable>(obj =>
+            if (!ScreenshotMode)
             {
-                bool isNewHoveredObj = false;
-                obj.Draw2D(mEditContext, this, mDrawList, ref isNewHoveredObj);
-                if (isNewHoveredObj)
-                    newHoveredObject = obj;
-            });
+                areaScene.ForEach<IViewportDrawable>(obj =>
+                {
+                    bool isNewHoveredObj = false;
+                    obj.Draw2D(mEditContext, this, mDrawList, ref isNewHoveredObj);
+                    if (isNewHoveredObj)
+                        newHoveredObject = obj;
+                });
+            }
 
             if (mArea.mRailHolder.mRails.Count > 0)
             {
@@ -1233,73 +1238,73 @@ namespace Fushigi.ui.widgets
                     }
                 }
 
-                foreach (CourseRail rail in mArea.mRailHolder.mRails)
+                if (!ScreenshotMode)
                 {
-                    if (rail.mPoints.Count == 0)
-                        continue;
-
-                    bool selected = mEditContext.IsSelected(rail);
-                    var rail_color = selected ? ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) : color;
-
-                    List<Vector2> pointsList = [];
-
-                    var segmentCount = rail.mPoints.Count;
-                    if (!rail.mIsClosed)
-                        segmentCount--;
-
-                    mDrawList.PathLineTo(WorldToScreen(rail.mPoints[0].mTranslate));
-                    for (int i = 0; i < segmentCount; i++)
+                    foreach (CourseRail rail in mArea.mRailHolder.mRails)
                     {
-                        var pointA = rail.mPoints[i];
-                        var pointB = rail.mPoints[(i + 1) % rail.mPoints.Count];
-
-                        var posA2D = WorldToScreen(pointA.mTranslate);
-                        var posB2D = WorldToScreen(pointB.mTranslate);
-
-                        Vector2 cpOutA2D = posA2D;
-                        Vector2 cpInB2D = posB2D;
-
-                        if (pointA.mIsCurve)
-                            cpOutA2D = WorldToScreen(pointA.mControl.mTranslate);
-
-                        if (pointB.mIsCurve)
-                            //invert control point
-                            cpInB2D = WorldToScreen(pointB.mTranslate - (pointB.mControl.mTranslate - pointB.mTranslate));
-
-                        if (cpOutA2D == posA2D && cpInB2D == posB2D)
-                        {
-                            mDrawList.PathLineTo(posB2D);
+                        if (rail.mPoints.Count == 0)
                             continue;
+
+                        bool selected = mEditContext.IsSelected(rail);
+                        var rail_color = selected ? ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) : color;
+
+                        List<Vector2> pointsList = [];
+
+                        var segmentCount = rail.mPoints.Count;
+                        if (!rail.mIsClosed)
+                            segmentCount--;
+
+                        mDrawList.PathLineTo(WorldToScreen(rail.mPoints[0].mTranslate));
+                        for (int i = 0; i < segmentCount; i++)
+                        {
+                            var pointA = rail.mPoints[i];
+                            var pointB = rail.mPoints[(i + 1) % rail.mPoints.Count];
+
+                            var posA2D = WorldToScreen(pointA.mTranslate);
+                            var posB2D = WorldToScreen(pointB.mTranslate);
+
+                            Vector2 cpOutA2D = posA2D;
+                            Vector2 cpInB2D = posB2D;
+
+                            if (pointA.mIsCurve)
+                                cpOutA2D = WorldToScreen(pointA.mControl.mTranslate);
+
+                            if (pointB.mIsCurve)
+                                //invert control point
+                                cpInB2D = WorldToScreen(pointB.mTranslate - (pointB.mControl.mTranslate - pointB.mTranslate));
+
+                            if (cpOutA2D == posA2D && cpInB2D == posB2D)
+                            {
+                                mDrawList.PathLineTo(posB2D);
+                                continue;
+                            }
+
+                            mDrawList.PathBezierCubicCurveTo(cpOutA2D, cpInB2D, posB2D);
                         }
 
-                        mDrawList.PathBezierCubicCurveTo(cpOutA2D, cpInB2D, posB2D);
-                    }
+                        float thickness = newHoveredObject == rail ? 3f : 2.5f;
 
-                    float thickness = newHoveredObject == rail ? 3f : 2.5f;
+                        mDrawList.PathStroke(rail_color, ImDrawFlags.None, thickness);
 
-                    mDrawList.PathStroke(rail_color, ImDrawFlags.None, thickness);
-
-                    foreach (CourseRail.CourseRailPoint pnt in rail.mPoints)
-                    {
-                        bool point_selected = mEditContext.IsSelected(pnt) || mEditContext.IsSelected(pnt.mControl);
-                        var rail_point_color = point_selected ? ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) : color;
-                        var size = (newHoveredObject == pnt || newHoveredObject == pnt.mControl) ? pointSize * 1.5f : pointSize;
-
-                        var pos2D = WorldToScreen(pnt.mTranslate);
-                        mDrawList.AddCircleFilled(pos2D, size, rail_point_color, pnt.mIsCurve ? 0:4);
-                        pointsList.Add(pos2D);
-
-                        if (point_selected && pnt.mIsCurve)
+                        foreach (CourseRail.CourseRailPoint pnt in rail.mPoints)
                         {
-                            var contPos2D = WorldToScreen(pnt.mControl.mTranslate);
-                            mDrawList.AddLine(pos2D, contPos2D, rail_point_color, thickness);
-                            mDrawList.AddCircleFilled(contPos2D, size, rail_point_color, 4);
+                            bool point_selected = mEditContext.IsSelected(pnt) || mEditContext.IsSelected(pnt.mControl);
+                            var rail_point_color = point_selected ? ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) : color;
+                            var size = (newHoveredObject == pnt || newHoveredObject == pnt.mControl) ? pointSize * 1.5f : pointSize;
+
+                            var pos2D = WorldToScreen(pnt.mTranslate);
+                            mDrawList.AddCircleFilled(pos2D, size, rail_point_color, pnt.mIsCurve ? 0:4);
+                            pointsList.Add(pos2D);
+
+                            if (point_selected && pnt.mIsCurve)
+                            {
+                                var contPos2D = WorldToScreen(pnt.mControl.mTranslate);
+                                mDrawList.AddLine(pos2D, contPos2D, rail_point_color, thickness);
+                                mDrawList.AddCircleFilled(contPos2D, size, rail_point_color, 4);
+                            }
                         }
                     }
                 }
-
-                if (mMultiSelecting && mMultiSelectStartPos != null && mMultiSelectCurrentPos != null)
-                    mDrawList.AddRect(mMultiSelectStartPos.Value, mMultiSelectCurrentPos.Value, MultiSelectBoxColor, 2f, ImDrawFlags.RoundCornersAll, MultiSelectBoxThickness);
             }
 
             foreach (CourseActor actor in mArea.GetActors())
@@ -1375,40 +1380,43 @@ namespace Fushigi.ui.widgets
 
                     bool isHovered = mHoveredObject == actor;
 
-                    switch(drawing)
+                    if (!ScreenshotMode)
                     {
-                        default:
+                        switch(drawing)
+                        {
+                            default:
+                                for (int i = 0; i < 4; i++)
+                                {
+                                    mDrawList.AddLine(
+                                    s_actorRectPolygon[i],
+                                    s_actorRectPolygon[(i+1) % 4 ],
+                                    color, isHovered ? 2.5f : 1.5f);
+                                }
+                                break;
+                            case "sphere": 
+                                var pos = WorldToScreen(Vector3.Transform(center, transform));
+                                var scale = Matrix4x4.CreateScale(actor.mScale);
+                                Vector2 rad = (WorldToScreen(Vector3.Transform(max, scale))-WorldToScreen(Vector3.Transform(min, scale)))/2;
+                                mDrawList.AddEllipse(pos, Math.Abs(rad.X), Math.Abs(rad.Y), color, -actor.mRotation.Z, 0, isHovered ? 2.5f : 1.5f);
+                            
+                                break;
+                        }
+                        if (mEditContext.IsSelected(actor))
+                        {
                             for (int i = 0; i < 4; i++)
                             {
-                                mDrawList.AddLine(
-                                s_actorRectPolygon[i],
-                                s_actorRectPolygon[(i+1) % 4 ],
-                                color, isHovered ? 2.5f : 1.5f);
+                                mDrawList.AddCircleFilled(s_actorRectPolygon[i],
+                                    pointSize, color);
+                                if(drawing == "sphere")
+                                {
+                                    mDrawList.AddLine(
+                                    s_actorRectPolygon[i],
+                                    s_actorRectPolygon[(i+1) % 4 ],
+                                    color, isHovered ? 2.5f : 1.5f);
+                                }
                             }
-                            break;
-                        case "sphere": 
-                            var pos = WorldToScreen(Vector3.Transform(center, transform));
-                            var scale = Matrix4x4.CreateScale(actor.mScale);
-                            Vector2 rad = (WorldToScreen(Vector3.Transform(max, scale))-WorldToScreen(Vector3.Transform(min, scale)))/2;
-                            mDrawList.AddEllipse(pos, Math.Abs(rad.X), Math.Abs(rad.Y), color, -actor.mRotation.Z, 0, isHovered ? 2.5f : 1.5f);
-                            
-                            break;
-                    }
-                    if (mEditContext.IsSelected(actor))
-                    {
-                        for (int i = 0; i < 4; i++)
-                        {
-                            mDrawList.AddCircleFilled(s_actorRectPolygon[i],
-                                pointSize, color);
-                            if(drawing == "sphere")
-                            {
-                                mDrawList.AddLine(
-                                s_actorRectPolygon[i],
-                                s_actorRectPolygon[(i+1) % 4 ],
-                                color, isHovered ? 2.5f : 1.5f);
-                            }
+                            mDrawList.AddEllipse(WorldToScreen(transform.Translation), pointSize*3, pointSize*3, color, -actor.mRotation.Z, 4, 2);
                         }
-                        mDrawList.AddEllipse(WorldToScreen(transform.Translation), pointSize*3, pointSize*3, color, -actor.mRotation.Z, 4, 2);
                     }
 
                     string name = actor.mPackName;
@@ -1427,6 +1435,9 @@ namespace Fushigi.ui.widgets
                     }
                 }
             }
+
+            if (mMultiSelecting && mMultiSelectStartPos != null && mMultiSelectCurrentPos != null)
+                mDrawList.AddRect(mMultiSelectStartPos.Value, mMultiSelectCurrentPos.Value, MultiSelectBoxColor, 2f, ImDrawFlags.RoundCornersAll, MultiSelectBoxThickness);
 
             mHoveredObject = newHoveredObject;
         }

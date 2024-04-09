@@ -361,6 +361,10 @@ namespace Fushigi.ui.widgets
 
                         ImGui.SameLine();
 
+                        ImGui.Checkbox("Screenshot Mode", ref viewport.ScreenshotMode);
+
+                        ImGui.SameLine();
+
                         if (ImGui.BeginCombo("Wonder View", viewMode[(int)activeViewport.WonderViewMode], ImGuiComboFlags.WidthFitPreview))
                         {
                             for (int n = 0; n < 3; n++)
