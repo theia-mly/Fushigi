@@ -113,6 +113,7 @@ namespace Fushigi.ui.widgets
         Vector2? mMultiSelectStartPos;
         Vector2? mMultiSelectCurrentPos;
         bool mMultiSelecting = false;
+        bool mMultiSelectEnded = true;
 
         public static uint GridColor = 0x77_FF_FF_FF;
         public static float GridLineThickness = 1.5f;
@@ -816,47 +817,61 @@ namespace Fushigi.ui.widgets
 
                 return;
             }
-          
+
             if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !isPanGesture)
             {
-                if (mMultiSelectStartPos != null)
+                if (mMultiSelectStartPos != null && !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseUnit>()))
                 {
-                    mMultiSelectCurrentPos = ImGui.GetMousePos();
-                    mMultiSelecting = true;
-
-                    Vector3 startPosWorldStart = ScreenToWorld(mMultiSelectStartPos.Value);
-                    Vector3 currentPosWorldStart = ScreenToWorld(mMultiSelectCurrentPos.Value);
-
-                    Vector3 startPosWorld = startPosWorldStart;
-                    Vector3 currentPosWorld = currentPosWorldStart;
-
-                    if (currentPosWorldStart.X < startPosWorldStart.X)
+                    DoDrag();
+                    void DoDrag()
                     {
-                        currentPosWorld.X = startPosWorldStart.X;
-                        startPosWorld.X = currentPosWorldStart.X;
-                    }
-                    if (currentPosWorldStart.Y < startPosWorldStart.Y)
-                    {
-                        currentPosWorld.Y = startPosWorldStart.Y;
-                        startPosWorld.Y = currentPosWorldStart.Y;
-                    }
-
-                    CourseActor[] actors = [.. mArea.GetActors()];
-                    foreach (var actor in actors)
-                    {
-                        float actorX = actor.mTranslation.X;
-                        float actorY = actor.mTranslation.Y;
-
-                        if (actorX > startPosWorld.X && actorX < currentPosWorld.X && actorY > startPosWorld.Y && actorY < currentPosWorld.Y)
+                        if ((mEditContext.IsAnySelected<CourseActor>())
+                            && mMultiSelectEnded)
                         {
-                            mEditContext.Select(actor);
-                        } else
+                            return;
+                        }
+                        mMultiSelectCurrentPos = ImGui.GetMousePos();
+                        mMultiSelecting = true;
+                        mMultiSelectEnded = false;
+
+                        Vector3 startPosWorldStart = ScreenToWorld(mMultiSelectStartPos.Value);
+                        Vector3 currentPosWorldStart = ScreenToWorld(mMultiSelectCurrentPos.Value);
+
+                        Vector3 startPosWorld = startPosWorldStart;
+                        Vector3 currentPosWorld = currentPosWorldStart;
+
+                        if (currentPosWorldStart.X < startPosWorldStart.X)
                         {
-                            mEditContext.Deselect(actor);
+                            currentPosWorld.X = startPosWorldStart.X;
+                            startPosWorld.X = currentPosWorldStart.X;
+                        }
+                        if (currentPosWorldStart.Y < startPosWorldStart.Y)
+                        {
+                            currentPosWorld.Y = startPosWorldStart.Y;
+                            startPosWorld.Y = currentPosWorldStart.Y;
+                        }
+
+                        CourseActor[] actors = [.. mArea.GetActors()];
+                        foreach (var actor in actors)
+                        {
+                            if (mLayersVisibility != null && mLayersVisibility.TryGetValue(actor.mLayer, out bool layerVisible))
+                                if (!layerVisible)
+                                    continue;
+
+                            float actorX = actor.mTranslation.X;
+                            float actorY = actor.mTranslation.Y;
+
+                            if (actorX > startPosWorld.X && actorX < currentPosWorld.X && actorY > startPosWorld.Y && actorY < currentPosWorld.Y)
+                            {
+                                mEditContext.Select(actor);
+                            } else
+                            {
+                                mEditContext.Deselect(actor);
+                            }
                         }
                     }
                 }
-                else if (!mMultiSelecting && mEditContext.IsAnySelected<CourseActor>())
+                if (!mMultiSelecting && mEditContext.IsAnySelected<CourseActor>())
                 {
                     foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
                     {
@@ -876,7 +891,7 @@ namespace Fushigi.ui.widgets
                         }
                     }
                 }
-                else if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? rail))
+                if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? rail))
                 {
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
 
@@ -892,7 +907,7 @@ namespace Fushigi.ui.widgets
                         rail.mTranslate = posVec;
                     }
                 }
-                else if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPointControl? railCont))
+                if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPointControl? railCont))
                 {
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
 
@@ -943,8 +958,8 @@ namespace Fushigi.ui.widgets
 
             if(ImGui.IsMouseReleased(0))
             {
-                if (mMultiSelecting)
-                    mMultiSelecting = false;
+                mMultiSelecting = false;
+                mMultiSelectEnded = true;
 
                 if(mHoveredObject != null && 
                 mHoveredObject is CourseActor &&
