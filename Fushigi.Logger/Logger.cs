@@ -44,7 +44,7 @@
             if (exception.StackTrace == null)
                 Log(exception.Message);
             else
-                Log(exception.StackTrace);
+                Log($"[ERROR] {exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}");
             Console.ForegroundColor = ConsoleColor.White;
 
             Environment.Exit(1);

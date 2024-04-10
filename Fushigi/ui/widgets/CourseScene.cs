@@ -182,6 +182,7 @@ namespace Fushigi.ui.widgets
             selectedArea = course.GetArea(0);
             undoWindow = new UndoWindow();
             activeViewport = null!;
+            UpdateDRPC();
         }
 
         public async Task PrepareResourcesLoad(GLTaskScheduler glScheduler,
@@ -386,6 +387,7 @@ namespace Fushigi.ui.widgets
                         {
                             selectedArea = area;
                             mHasFilledLayers = false;
+                            UpdateDRPC();
                         }
                         activeViewport = viewport;
                     }
@@ -449,6 +451,22 @@ namespace Fushigi.ui.widgets
 
             if (status)
                 ImGui.End();
+        }
+
+        void UpdateDRPC()
+        {
+            string sCourseID = course.GetName().Split("_")[0].Replace("Course", "");
+            if (int.TryParse(sCourseID, out int courseID))
+            {
+                if (RomFS.CourseNames.TryGetValue(courseID, out string? courseName))
+                    DRPC.SetEditingCourse(selectedArea.GetName(), courseName);
+                else
+                    Logger.Logger.LogWarning("CourseScene", $"Failed to get course name for {course.GetName()}");
+
+                return;
+            }
+
+            Logger.Logger.LogWarning("CourseScene", $"Failed to get course ID for {course.GetName()}");
         }
 
         void UndoHistoryPanel()

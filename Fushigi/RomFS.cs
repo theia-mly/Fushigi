@@ -1,14 +1,10 @@
 ﻿using Fushigi.Bfres;
 using Fushigi.Byml;
 using Fushigi.gl.Bfres;
-using Fushigi.SARC;
 using Fushigi.Msbt;
 using Fushigi.util;
 using Silk.NET.OpenGL;
-using System.Diagnostics;
 using Fushigi.course;
-using Silk.NET.Input;
-using Fushigi.Logger;
 
 namespace Fushigi
 {
@@ -97,18 +93,16 @@ namespace Fushigi
                 string worldName = Path.GetFileName(loadFile).Split(".game")[0];
 
                 if (sCourseEntries.ContainsKey(worldName))
-                {
                     return;
-                }
 
-                WorldEntry worldEntry = new();
-                worldEntry.name = worldName;
+                WorldEntry worldEntry = new WorldEntry()
+                {
+                    name = worldName
+                };
 
                 var worldKey = worldName.Replace("World", "WorldNameOrigin");              
-                if (worldNames.ContainsKey(worldKey))
-                {
-                    worldEntry.name = worldNames[worldKey];
-                }
+                if (worldNames.TryGetValue(worldKey, out string? value))
+                    worldEntry.name = value;
 
                 Dictionary<string, WorldEntry.CourseEntry> courseLocationList = new();
                 Byml.Byml byml = new Byml.Byml(new MemoryStream(File.ReadAllBytes(loadFile)));
@@ -125,13 +119,17 @@ namespace Fushigi
                     WorldEntry.CourseEntry courseEntry = new();
                     var courseInfo = new CourseInfo(courseLocation);
                     if (courseInfo.CourseNameLabel != null && 
-                        courseNames.ContainsKey(courseInfo.CourseNameLabel))
+                        courseNames.TryGetValue(courseInfo.CourseNameLabel, out string? courseName))
                     {
-                        courseEntry.name = courseNames[courseInfo.CourseNameLabel];
+                        courseEntry.name = courseName;
+                        if (!CourseNames.ContainsKey(courseInfo.GlobalCourseId))
+                            CourseNames.Add(courseInfo.GlobalCourseId, courseName);
                     }
                     else
                     {
                         courseEntry.name = "Name not found";
+                        if (!CourseNames.ContainsKey(courseInfo.GlobalCourseId))
+                            CourseNames.Add(courseInfo.GlobalCourseId, courseEntry.name);
                     }
 
                     courseLocationList.Add(courseLocation, courseEntry);
@@ -192,7 +190,8 @@ namespace Fushigi
 
         
         
-        private static string sRomFSRoot;
-        private static Dictionary<string, WorldEntry> sCourseEntries = [];
+        private static string sRomFSRoot = "";
+        private static readonly Dictionary<string, WorldEntry> sCourseEntries = [];
+        public static readonly Dictionary<int, string> CourseNames = [];
     }
 }

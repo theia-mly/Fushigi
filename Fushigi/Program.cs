@@ -4,6 +4,7 @@ using Fushigi.ui;
 using System.Runtime.InteropServices;
 using Fushigi.windowing;
 using Fushigi.Logger;
+using Fushigi;
 
 internal class Program
 {
@@ -34,6 +35,8 @@ internal class Program
             File.WriteAllText("imgui.ini", File.ReadAllText(Path.Combine("res", "imgui-default.ini")));
             Logger.LogMessage("Program", "Created!");
         };
+
+        DRPC.Initialize();
 
         _ = new MainWindow();
         WindowManager.Run();
