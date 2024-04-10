@@ -8,13 +8,15 @@ using Fushigi;
 
 internal class Program
 {
+    public const string Version = "v1.1.4";
+
     private static void Main(string[] args)
     {
         Logger.CreateLogger();
 
         AppDomain.CurrentDomain.UnhandledException += Logger.HandleUnhandledException;
 
-        Logger.LogMessage("Program", "Starting Fushigi v0.6...");
+        Logger.LogMessage("Program", $"Starting Fushigi {Version}...");
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             Logger.LogMessage("Program", "Running on osx");
