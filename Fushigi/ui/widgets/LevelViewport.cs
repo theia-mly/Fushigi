@@ -847,7 +847,7 @@ namespace Fushigi.ui.widgets
             if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && !isPanGesture)
             {
                 if (mMultiSelectStartPos != null &&
-                    mEditorMode == EditorMode.Actors &&
+                    !ImGui.IsWindowHovered() && mEditorMode == EditorMode.Actors &&
                     !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>()
                     || mEditContext.IsAnySelected<CourseUnit>() || mEditContext.IsAnySelected<BGUnitRail>()
                     || mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
