@@ -1436,7 +1436,7 @@ namespace Fushigi.ui.widgets
             BGUnitRailSceneObj GetRailSceneObj(object courseObject)
             {
                 if (!areaScenes[selectedArea].TryGetObjFor(courseObject, out var sceneObj))
-                    throw new Exception("Couldn't find scene object");
+                    return null;
                 return (BGUnitRailSceneObj)sceneObj;
             }
 
@@ -1464,7 +1464,11 @@ namespace Fushigi.ui.widgets
                 {
                     foreach (var wall in unit.Walls)
                     {
-                        GetRailSceneObj(wall.ExternalRail).Visible = unit.Visible;
+                        BGUnitRailSceneObj railObj = GetRailSceneObj(wall.ExternalRail);
+                        if (railObj == null)
+                            continue;
+
+                        railObj.Visible = unit.Visible;
                         foreach (var rail in wall.InternalRails)
                             GetRailSceneObj(rail).Visible = unit.Visible;
                     }
@@ -1485,7 +1489,11 @@ namespace Fushigi.ui.widgets
 
                         ImGui.Indent();
 
-                        if (ImGui.Checkbox($"##Visible{wallname}", ref GetRailSceneObj(rail).Visible))
+                        BGUnitRailSceneObj railObj = GetRailSceneObj(rail);
+                        if (railObj == null)
+                            return;
+
+                        if (ImGui.Checkbox($"##Visible{wallname}", ref railObj.Visible))
                         {
 
                         }

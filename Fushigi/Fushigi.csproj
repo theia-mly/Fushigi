@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
     <PackageReference Include="fasterflect" Version="3.0.0" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="ImGui.NET" Version="1.90.0.1" />
@@ -27,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Fushigi.Bfres\Fushigi.Bfres.csproj" />
     <ProjectReference Include="..\Fushigi.Byml\Fushigi.Byml.csproj" />
+    <ProjectReference Include="..\Fushigi.Logger\Fushigi.Logger.csproj" />
     <ProjectReference Include="..\Fushigi.Msbt\Fushigi.Msbt.csproj" />
     <ProjectReference Include="..\SARC\Fushigi.SARC.csproj" />
   </ItemGroup>

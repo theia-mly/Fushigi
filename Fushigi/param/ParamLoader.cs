@@ -12,39 +12,33 @@ namespace Fushigi.param
     {
         public static void Load()
         {
-            mParams = new Dictionary<string, ParamHolder>();
-            var nodes = JsonNode.Parse(
-                File.ReadAllText(
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "res", "AreaParam.json")
-                )
-            ).AsObject();
-            ParamHolder areaParms = new ParamHolder();
+            ParamHolder areaParams = [];
+            mParams = [];
 
-            foreach (KeyValuePair<string, JsonNode> obj in nodes)
+            string areaParamText = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "res", "AreaParam.json"));
+            var jsonNode = JsonNode.Parse(areaParamText);
+            if (jsonNode == null)
+                return;
+
+            var nodes = jsonNode.AsObject();
+
+            foreach (KeyValuePair<string, JsonNode?> obj in nodes)
             {
                 // todo -- support other things
                 if (obj.Value is JsonValue)
-                {
-                    areaParms.Add(obj.Key, (string)obj.Value);
-                }
-                
+                    areaParams.Add(obj.Key, (string)obj.Value);
             }
 
-            mParams.Add("AreaParam", areaParms);
+            mParams.Add("AreaParam", areaParams);
         }
 
-        public static ParamHolder GetHolder(string name)
-        {
-            return mParams[name];
-        }
+        public static ParamHolder GetHolder(string name) => mParams[name];
 
-        static Dictionary<string, ParamHolder> mParams;
+        static Dictionary<string, ParamHolder> mParams = [];
     }
 
     public class ParamHolder : Dictionary<string, string>
     {
 
     }
-
-    
 }

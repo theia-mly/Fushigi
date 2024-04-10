@@ -1,4 +1,5 @@
-﻿using Silk.NET.OpenGL;
+﻿using Fushigi.Logger;
+using Silk.NET.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,15 +89,17 @@ namespace Fushigi.gl
                 dest_format = InternalFormat.SrgbAlpha;
             }
 
-            GLTexture tex = new GLTexture(gl);
-            tex.Target = target;
-            tex.Width = texture.Width;
-            tex.Height = texture.Height;
-            tex.MinFilter = texture.MinFilter;
-            tex.MagFilter = texture.MagFilter;
-            tex.InternalFormat = dest_format;
-            tex.PixelFormat = PixelFormat.Rgba;
-            tex.PixelType = PixelType.UnsignedByte;
+            GLTexture tex = new GLTexture(gl)
+            {
+                Target = target,
+                Width = texture.Width,
+                Height = texture.Height,
+                MinFilter = texture.MinFilter,
+                MagFilter = texture.MagFilter,
+                InternalFormat = dest_format,
+                PixelFormat = PixelFormat.Rgba,
+                PixelType = PixelType.UnsignedByte
+            };
 
             //Dst
             tex.Bind();
@@ -114,7 +117,7 @@ namespace Fushigi.gl
             var error = gl.GetError();
             if (error != GLEnum.NoError)
             {
-                Console.WriteLine($"OpenGL Error: {error}");
+                Logger.Logger.LogError("GLTexture", $"OpenGL Error: {error}");
                // throw new Exception();
             }
 

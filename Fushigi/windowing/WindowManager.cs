@@ -107,14 +107,11 @@ namespace Fushigi.windowing
                     foreach (var window in s_pendingInits)
                     {
                         window.Initialize();
-
-                        if (SharedContext == null)
-                            SharedContext = window.GLContext;
+                        SharedContext ??= window.GLContext;
                     }
 
                     s_pendingInits.Clear();
                 }
-
 
                 for (int i = 0; i < s_windows.Count; i++)
                 {
@@ -122,23 +119,17 @@ namespace Fushigi.windowing
 
                     window.DoEvents();
                     if (!window.IsClosing)
-                    {
                         window.DoUpdate();
-                    }
 
                     if (!window.IsClosing)
-                    {
                         window.DoRender();
-                    }
 
                     if (window.IsClosing)
                     {
                         s_windows.RemoveAt(i);
 
                         if (window.GLContext == SharedContext && s_windows.Count > 0)
-                        {
                             SharedContext = s_windows[0].window.GLContext;
-                        }
 
                         res.Input.Dispose();
                         res.ImguiController.Dispose();

@@ -1,5 +1,6 @@
 ﻿using Fasterflect;
 using Fushigi.course;
+using Fushigi.Logger;
 using Fushigi.ui.undo;
 using Fushigi.util;
 using System;
@@ -37,7 +38,7 @@ namespace Fushigi.ui
 
         public void AddActorToGroup(CourseGroup group, CourseActor actor)
         {
-            Console.WriteLine($"Adding actor {actor.mPackName}[{actor.mHash}] to group [{group.mHash}].");
+            Logger.Logger.LogMessage("CourseAreaEditContext", $"Adding actor {actor.mPackName}[{actor.mHash}] to group [{group.mHash}].");
             CommitAction(
                 group.mActors.RevertableAdd(actor.mHash,
                 $"Add {actor.mPackName} to simultaneous group")
@@ -52,7 +53,7 @@ namespace Fushigi.ui
 
         public void RemoveActorFromGroup(CourseGroup group, CourseActor actor)
         {
-            Console.WriteLine($"Removing actor {actor.mPackName}[{actor.mHash}] from group [{group.mHash}].");
+            Logger.Logger.LogError("CourseAreaEditContext", $"Removing actor {actor.mPackName}[{actor.mHash}] from group [{group.mHash}].");
             if (group.TryGetIndexOfActor(actor.mHash, out int index))
             {
                 CommitAction(
@@ -239,7 +240,7 @@ namespace Fushigi.ui
             string text = $"Adding {typeof(T).Name()}";
             if (extraText != null)
                 text += $" {extraText}";
-            Console.WriteLine(text);
+            Logger.Logger.LogMessage("CourseAreaEditContext", text);
         }
 
         private void LogDeleting<T>(ulong hash) => 
@@ -250,7 +251,7 @@ namespace Fushigi.ui
             string text = $"Deleting {typeof(T).Name()}";
             if (extraText != null)
                 text += $" {extraText}";
-            Console.WriteLine(text);
+            Logger.Logger.LogMessage("CourseAreaEditContext", text);
         }
     }
 }

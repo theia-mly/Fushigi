@@ -1,4 +1,5 @@
-﻿using Fushigi.util;
+﻿using Fushigi.Logger;
+using Fushigi.util;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -51,7 +52,7 @@ namespace Fushigi.rstb
                 HashToResourceSize[hash] = CalculateResourceSize(decompressed_size, ext);
             else
             {
-                Console.WriteLine($"Warning! File {path} not found in resource table!");
+                Logger.Logger.LogWarning("GLTexture", $"Warning! File {path} not found in resource table!");
             }
         }
 
@@ -198,15 +199,15 @@ namespace Fushigi.rstb
                 string path = $"{folder}/{Path.GetFileName(file).Replace(".zs", "")}";
                 uint hash = Crc32.Compute(path);
 
-                if (this.HashToResourceSize.ContainsKey(hash))
+                if (HashToResourceSize.TryGetValue(hash, out uint value))
                 {
                     //Round to nearest 32
                     size = (size + 31) & -32;
 
                     //Find difference in raw file size and resource size
-                    uint resource_size = this.HashToResourceSize[hash];
+                    uint resource_size = value;
                     int diff = (int)resource_size - size;
-                    Console.WriteLine($"decomp_size {size} resource_size difference {diff} path {path}");
+                    Logger.Logger.LogMessage("RSTB", $"decomp_size {size} resource_size difference {diff} path {path}");
                 }
             }
         }

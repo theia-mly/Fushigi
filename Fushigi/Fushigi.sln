@@ -11,7 +11,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fushigi.SARC", "..\SARC\Fus
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fushigi.Bfres", "..\Fushigi.Bfres\Fushigi.Bfres.csproj", "{1AED611D-03D2-4D8B-B3BF-494429D727FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fushigi.Msbt", "..\Fushigi.Msbt\Fushigi.Msbt.csproj", "{6A2ED54F-3A5A-4211-BFF7-DC45576CE784}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fushigi.Msbt", "..\Fushigi.Msbt\Fushigi.Msbt.csproj", "{6A2ED54F-3A5A-4211-BFF7-DC45576CE784}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fushigi.Logger", "..\Fushigi.Logger\Fushigi.Logger.csproj", "{F3CA4EDA-B988-4844-B72E-E8F1BC85D0C9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4DA7AD41-495A-4C5C-BEC4-87DB57E66B70}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +46,10 @@ Global
 		{6A2ED54F-3A5A-4211-BFF7-DC45576CE784}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A2ED54F-3A5A-4211-BFF7-DC45576CE784}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A2ED54F-3A5A-4211-BFF7-DC45576CE784}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3CA4EDA-B988-4844-B72E-E8F1BC85D0C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3CA4EDA-B988-4844-B72E-E8F1BC85D0C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3CA4EDA-B988-4844-B72E-E8F1BC85D0C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3CA4EDA-B988-4844-B72E-E8F1BC85D0C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -297,7 +297,7 @@ namespace Fushigi.gl
         public DDSPFHeader PfHeader;
         public DX10Header Dx10Header;
 
-        public byte[] ImageData;
+        public byte[] ImageData = [];
         public bool IsDX10 => PfHeader.FourCC == FOURCC_DX10;
 
         public bool IsCubeMap
@@ -336,22 +336,20 @@ namespace Fushigi.gl
 
         public void Load(Stream stream)
         {
-            using (var reader = new BinaryReader(stream))
-            {
-                stream.Read(AsSpan(ref MainHeader));
-                stream.Read(AsSpan(ref PfHeader));
+            using var reader = new BinaryReader(stream);
+            stream.Read(AsSpan(ref MainHeader));
+            stream.Read(AsSpan(ref PfHeader));
 
-                reader.BaseStream.Seek(MainHeader.Size + 4, SeekOrigin.Begin);
+            reader.BaseStream.Seek(MainHeader.Size + 4, SeekOrigin.Begin);
 
-                if (IsDX10)
-                    stream.Read(AsSpan(ref Dx10Header));
+            if (IsDX10)
+                stream.Read(AsSpan(ref Dx10Header));
 
-                SetupFormat();
+            SetupFormat();
 
-                ImageData = reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
-                uint size = CalculateSize();
-                Console.WriteLine();
-            }
+            ImageData = reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
+            uint size = CalculateSize();
+            Console.WriteLine();
         }
 
         public uint CalculateSize()

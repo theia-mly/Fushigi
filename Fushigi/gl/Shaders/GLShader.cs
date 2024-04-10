@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Numerics;
+using Fushigi.Logger;
 using Silk.NET.OpenGL;
 
 namespace Fushigi.gl
@@ -149,9 +150,7 @@ namespace Fushigi.gl
             _gl.CompileShader(handle);
             string infoLog = _gl.GetShaderInfoLog(handle);
             if (!string.IsNullOrWhiteSpace(infoLog))
-            {
-                Console.WriteLine($"Error compiling shader of type {type}, failed with error {infoLog}");
-            }
+                Logger.Logger.LogError("GLShader", $"Error compiling shader of type {type}, failed with error {infoLog}");
 
             return handle;
         }

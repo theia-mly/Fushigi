@@ -8,6 +8,7 @@ using Silk.NET.OpenGL;
 using System.Diagnostics;
 using Fushigi.course;
 using Silk.NET.Input;
+using Fushigi.Logger;
 
 namespace Fushigi
 {
@@ -69,7 +70,7 @@ namespace Fushigi
 
         public static byte[] GetFileBytes(string path)
         {
-            Console.WriteLine($"RomFS::GetFileBytes() -- {path}");
+            Logger.Logger.LogMessage("RomFS", $"GetFileBytes() -- {path}");
             return File.ReadAllBytes(Path.Combine(sRomFSRoot, path));
         }    
 

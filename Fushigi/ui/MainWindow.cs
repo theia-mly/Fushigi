@@ -10,24 +10,23 @@ using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
 
 namespace Fushigi.ui
 {
-    public class MainWindow : IPopupModalHost
+    public partial class MainWindow : IPopupModalHost
     {
-        private GLTaskScheduler mGLTaskScheduler = new();
-        private PopupModalHost mModalHost = new();
+        private readonly GLTaskScheduler mGLTaskScheduler = new();
+        private readonly PopupModalHost mModalHost = new();
 
         private ImFontPtr mDefaultFont;
-        private ImFontPtr mIconFont;
+        private readonly ImFontPtr mIconFont;
 
         public MainWindow()
         {
             WindowManager.CreateWindow(out mWindow,
                 onConfigureIO: () =>
                 {
-                    Console.WriteLine("Initializing Window");
+                    Logger.Logger.LogMessage("MainWindow", "Initializing Window");
                     unsafe
                     {
                         var io = ImGui.GetIO();
@@ -247,7 +246,7 @@ namespace Fushigi.ui
                                 if (await TryCloseCourse())
                                 {
                                     mCurrentCourseName = selectedCourse;
-                                    Console.WriteLine($"Selected course {mCurrentCourseName}!");
+                                    Logger.Logger.LogMessage("MainWindow", $"Selected course {mCurrentCourseName}!");
                                     await LoadCourseWithProgressBar(mCurrentCourseName);
                                     UserSettings.AppendRecentCourse(mCurrentCourseName);
                                 }
@@ -273,7 +272,7 @@ namespace Fushigi.ui
                             FolderDialog dlg = new FolderDialog();
                             if (dlg.ShowDialog("Select the romfs directory to save to."))
                             {
-                                Console.WriteLine($"Setting RomFS path to {dlg.SelectedPath}");
+                                Logger.Logger.LogMessage("MainWindow", $"Setting RomFS path to {dlg.SelectedPath}");
                                 UserSettings.SetModRomFSPath(dlg.SelectedPath);
                                 mSelectedCourseScene.Save();
                             }
@@ -307,9 +306,7 @@ namespace Fushigi.ui
 
                     /* a ImGUI menu item that just closes the application */
                     if (ImGui.MenuItem("Close"))
-                    {
                         mWindow.Close();
-                    }
 
                     /* end File menu */
                     ImGui.EndMenu();
@@ -318,24 +315,16 @@ namespace Fushigi.ui
                 if (ImGui.BeginMenu("Edit"))
                 {
                     if (ImGui.MenuItem("Preferences"))
-                    {
                         mIsShowPreferenceWindow = true;
-                    }
 
                     if (ImGui.MenuItem("Regenerate Parameter Database", ParamDB.sIsInit))
-                    {
                         _ = LoadParamDBWithProgressBar(this);
-                    }
 
                     if (ImGui.MenuItem("Undo"))
-                    {
                         mSelectedCourseScene?.Undo();
-                    }
 
                     if (ImGui.MenuItem("Redo"))
-                    {
                         mSelectedCourseScene?.Redo();
-                    }
 
                     /* end Edit menu */
                     ImGui.EndMenu();
@@ -368,7 +357,6 @@ namespace Fushigi.ui
 
             DrawMainMenu();
 
-            
             if (!string.IsNullOrEmpty(RomFS.GetRoot()) &&
                 !string.IsNullOrEmpty(UserSettings.GetModRomFSPath()))
             {
@@ -376,9 +364,7 @@ namespace Fushigi.ui
             }
 
             if (mIsShowPreferenceWindow)
-            {
                 Preferences.Draw(ref mIsShowPreferenceWindow, mGLTaskScheduler, this);
-            }
 
             mModalHost.DrawHostedModals();
 
@@ -397,25 +383,11 @@ namespace Fushigi.ui
             return mModalHost.ShowPopUp(modal, title, windowFlags, minWindowSize);
         }
 
-        public Task WaitTick()
-        {
-            return ((IPopupModalHost)mModalHost).WaitTick();
-        }
+        public Task WaitTick() => ((IPopupModalHost)mModalHost).WaitTick();
 
         readonly IWindow mWindow;
         string? mCurrentCourseName;
         CourseScene? mSelectedCourseScene;
         bool mIsShowPreferenceWindow = false;
-
-
-        class WelcomeMessage : OkDialog<WelcomeMessage>
-        {
-            protected override string Title => "Welcome";
-
-            protected override void DrawBody()
-            {
-                ImGui.Text("Welcome to Fushigi! Set the RomFS game path and save directory to get started.");
-            }
-        }
     }
 }
