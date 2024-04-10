@@ -228,6 +228,7 @@ namespace Fushigi.course
                 wonderVisible = wonderVisible,
                 mStartingTrans = mStartingTrans,
                 mTranslation = mTranslation,
+                mScale = mScale,
                 mRotation = mRotation
             };
             cloned.mStartingTrans = mStartingTrans;
