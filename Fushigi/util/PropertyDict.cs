@@ -124,6 +124,8 @@ namespace Fushigi.util
             return mEntries.GetEnumerator();
         }
 
+        public PropertyDict Clone() => new(mEntries.Clone() as Entry[]);
+
         readonly Entry[] mEntries;
     }
 }

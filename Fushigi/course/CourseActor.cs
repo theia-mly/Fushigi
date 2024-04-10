@@ -234,8 +234,8 @@ namespace Fushigi.course
             cloned.mStartingTrans = mStartingTrans;
             cloned.mAreaHash = mAreaHash;
             cloned.mHash = (ulong)(new Random().NextDouble() * ulong.MaxValue);
-            cloned.mActorParameters = mActorParameters;
-            cloned.mSystemParameters = mSystemParameters;
+            cloned.mActorParameters = mActorParameters.Clone();
+            cloned.mSystemParameters = mSystemParameters.Clone();
             cloned.mActorPack = mActorPack;
 
             return cloned;
