@@ -848,8 +848,9 @@ namespace Fushigi.ui.widgets
             {
                 if (mMultiSelectStartPos != null &&
                     mEditorMode == EditorMode.Actors &&
-                    !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseUnit>()
-                    || mEditContext.IsAnySelected<BGUnitRail>() || mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
+                    !(mEditContext.IsAnySelected<CourseRail.CourseRailPoint>() || mEditContext.IsAnySelected<CourseRail.CourseRailPointControl>()
+                    || mEditContext.IsAnySelected<CourseUnit>() || mEditContext.IsAnySelected<BGUnitRail>()
+                    || mEditContext.IsAnySelected<BGUnitRail.RailPoint>()))
                 {
                     DoDrag();
                     void DoDrag()
