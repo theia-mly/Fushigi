@@ -2616,51 +2616,50 @@ namespace Fushigi.ui.widgets
         {
             var actors = objectsToDelete.OfType<CourseActor>();
             if (actors.Count() == 1)
-                actionName = "Delete "+actors.ElementAt(0).mPackName;
-            List<string> dstMsgStrs = [];
-            List<string> srcMsgStrs = [];
+                actionName = "Delete " + actors.ElementAt(0).mPackName;
 
-            foreach (var actor in actors)
+            if (!UserSettings.HideDeletingLinkedActorsPopup())
             {
-                if (selectedArea.mLinkHolder.HasLinksWithDest(actor.mHash))
+                List<string> dstMsgStrs = [];
+                List<string> srcMsgStrs = [];
+
+                foreach (var actor in actors)
                 {
-                    var links = selectedArea.mLinkHolder.GetSrcHashesFromDest(actor.mHash);
-
-                    foreach (KeyValuePair<string, List<ulong>> kvp in links)
+                    if (selectedArea.mLinkHolder.HasLinksWithDest(actor.mHash))
                     {
-                        var hashes = kvp.Value;
+                        var links = selectedArea.mLinkHolder.GetSrcHashesFromDest(actor.mHash);
 
-                        foreach (var hash in hashes)
+                        foreach (KeyValuePair<string, List<ulong>> kvp in links)
                         {
-                            /* only delete actors that the hash exists for...this may be caused by a user already deleting the source actor */
-                            if (selectedArea.mActorHolder.TryGetActor(hash, out _))
+                            var hashes = kvp.Value;
+
+                            foreach (var hash in hashes)
                             {
-                                dstMsgStrs.Add($"{selectedArea.mActorHolder[hash].mPackName} [{selectedArea.mActorHolder[hash].mName}]\n");
+                                /* only delete actors that the hash exists for...this may be caused by a user already deleting the source actor */
+                                if (selectedArea.mActorHolder.TryGetActor(hash, out _))
+                                {
+                                    dstMsgStrs.Add($"{selectedArea.mActorHolder[hash].mPackName} [{selectedArea.mActorHolder[hash].mName}]\n");
+                                }
                             }
                         }
-                    }
 
-                    var destHashes = selectedArea.mLinkHolder.GetDestHashesFromSrc(actor.mHash);
+                        var destHashes = selectedArea.mLinkHolder.GetDestHashesFromSrc(actor.mHash);
 
-                    foreach (KeyValuePair<string, List<ulong>> kvp in destHashes)
-                    {
-                        var hashes = kvp.Value;
-
-                        foreach (var hash in hashes)
+                        foreach (KeyValuePair<string, List<ulong>> kvp in destHashes)
                         {
-                            if (selectedArea.mActorHolder.TryGetActor(hash, out _))
+                            var hashes = kvp.Value;
+
+                            foreach (var hash in hashes)
                             {
-                                srcMsgStrs.Add($"{selectedArea.mActorHolder[hash].mPackName} [{selectedArea.mActorHolder[hash].mName}]\n");
+                                if (selectedArea.mActorHolder.TryGetActor(hash, out _))
+                                {
+                                    srcMsgStrs.Add($"{selectedArea.mActorHolder[hash].mPackName} [{selectedArea.mActorHolder[hash].mName}]\n");
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            bool noWarnings = (dstMsgStrs.Count == 0 && srcMsgStrs.Count == 0);
-
-            if (!noWarnings)
-            {
                 var result = await OperationWarningDialog.ShowDialog(mPopupModalHost,
                 "Deletion warning",
                 "The object(s) you are about to delete " +

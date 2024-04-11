@@ -23,6 +23,7 @@ namespace Fushigi.ui.widgets
                 var mod = UserSettings.GetModRomFSPath();
                 var useGameShaders = UserSettings.UseGameShaders();
                 var useAstcTextureCache = UserSettings.UseAstcTextureCache();
+                var hideDeletingLinkedActorsPopup = UserSettings.HideDeletingLinkedActorsPopup();
 
                 ImGui.Indent();
 
@@ -98,6 +99,13 @@ namespace Fushigi.ui.widgets
                 }
 
                 Tooltip.Show("Saves ASTC textures to disk which takes up disk space, but improves loading times and ram usage significantly.");
+
+                if (ImGui.Checkbox("Hide Deleting Linked Actors Popup", ref hideDeletingLinkedActorsPopup))
+                {
+                    UserSettings.SetHideDeletingLinkedObjectsPopup(hideDeletingLinkedActorsPopup);
+                }
+
+                Tooltip.Show("Hides the warning popup when you delete actors with links.");
 
                 ImGui.Unindent();
 

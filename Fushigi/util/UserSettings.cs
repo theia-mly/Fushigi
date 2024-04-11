@@ -27,6 +27,7 @@ namespace Fushigi.util
             public List<string> RecentCourses;
             public bool UseGameShaders;
             public bool UseAstcTextureCache;
+            public bool HideDeletingLinkedActorsPopup;
 
             public Settings()
             {
@@ -36,6 +37,7 @@ namespace Fushigi.util
                 RecentCourses = new List<string>(MaxRecents);
                 UseGameShaders = false;
                 UseAstcTextureCache = false;
+                HideDeletingLinkedActorsPopup = false;
             }
         }
 
@@ -58,6 +60,7 @@ namespace Fushigi.util
 
         public static bool UseGameShaders() => AppSettings.UseGameShaders;
         public static bool UseAstcTextureCache() => AppSettings.UseAstcTextureCache;
+        public static bool HideDeletingLinkedActorsPopup() => AppSettings.HideDeletingLinkedActorsPopup;
 
         public static void SetGameShaders(bool value)
         {
@@ -68,6 +71,12 @@ namespace Fushigi.util
         public static void SetAstcTextureCache(bool value)
         {
             AppSettings.UseAstcTextureCache = value;
+            Save(); //save setting
+        }
+
+        public static void SetHideDeletingLinkedObjectsPopup(bool value)
+        {
+            AppSettings.HideDeletingLinkedActorsPopup = value;
             Save(); //save setting
         }
 

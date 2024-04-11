@@ -321,7 +321,7 @@ namespace Fushigi.course
 
         public static readonly Dictionary<CourseActorType, uint> CourseActorColors = new()
         {
-            { CourseActorType.None, ImGui.ColorConvertFloat4ToU32(new(0.8f, 0.8f, 0.8f, 1)) },
+            { CourseActorType.None, ImGui.ColorConvertFloat4ToU32(new(0.125f, 0.988f, 0.561f, 1)) },
             { CourseActorType.Tag, ImGui.ColorConvertFloat4ToU32(new(1, 0.55f, 0, 1)) },
             { CourseActorType.Area, ImGui.ColorConvertFloat4ToU32(new(1, 0, 0, 1)) },
             { CourseActorType.Block, ImGui.ColorConvertFloat4ToU32(new(0.125f, 0.976f, 0.988f, 1)) },
@@ -348,9 +348,7 @@ namespace Fushigi.course
         public CourseActorHolder(BymlArrayNode actorArray)
         {
             foreach (BymlHashTable actor in actorArray.Array)
-            {
                 mActors.Add(new CourseActor(actor));
-            }
         }
 
         public bool TryGetActor(ulong hash, [NotNullWhen(true)] out CourseActor? actor)

@@ -1368,8 +1368,7 @@ namespace Fushigi.ui.widgets
                     s_actorRectPolygon[3] = WorldToScreen(Vector3.Transform(new Vector3(min.X, min.Y, 0) + off, transform));
 
                     uint color = CourseActor.CourseActorColors[CourseActorType.None];
-                    if (CourseActor.CourseActorColors.TryGetValue(actor.mType, out uint value))
-                        color = value;
+                    CourseActor.CourseActorColors.TryGetValue(actor.mType, out color);
 
                     bool isHovered = mHoveredObject == actor;
 
