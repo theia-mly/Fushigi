@@ -201,15 +201,22 @@ namespace Fushigi.course
         }
     }
 
-    public class BGUnitRail(CourseUnit unit)
+    public class BGUnitRail
     {
-        public readonly CourseUnit mCourseUnit = unit;
+        public readonly CourseUnit mCourseUnit;
 
         public List<RailPoint> Points = [];
 
-        public bool IsClosed = false;
+        public bool IsClosed = true;
 
         public bool IsInternal = false;
+
+        public BGUnitRail(CourseUnit unit)
+        {
+            mCourseUnit = unit;
+            if (unit.mModelType == CourseUnit.ModelType.Bridge)
+                IsClosed = false;
+        }
 
         public class RailPoint(BGUnitRail rail, Vector3 position)
         {
