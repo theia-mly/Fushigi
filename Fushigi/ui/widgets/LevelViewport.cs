@@ -720,7 +720,7 @@ namespace Fushigi.ui.widgets
             {
                 CopiedObjects = new CourseActor[selectedActors.Length];
                 for (int i = 0; i < CopiedObjects.Length; i++)
-                    CopiedObjects[i] = selectedActors[i].Clone();
+                    CopiedObjects[i] = selectedActors[i].Clone(mArea);
             }
             bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
             bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
@@ -747,7 +747,7 @@ namespace Fushigi.ui.widgets
             if (freshCopy)
                 newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
             else
-                newActor = actor.Clone();
+                newActor = actor.Clone(mArea);
             newActor.mStartingTrans = actor.mStartingTrans;
             mEditContext.AddActor(newActor);
 
@@ -782,7 +782,7 @@ namespace Fushigi.ui.widgets
                 if (freshCopy)
                     newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
                 else
-                    newActor = actor.Clone();
+                    newActor = actor.Clone(mArea);
 
                 newActor.mTranslation = pos;
 

@@ -278,7 +278,7 @@ namespace Fushigi.course
             return CourseActorType.None;
         }
 
-        public CourseActor Clone()
+        public CourseActor Clone(CourseArea areaTo)
         {
             CourseActor cloned = new(mPackName, mAreaHash, mLayer)
             {
@@ -293,7 +293,7 @@ namespace Fushigi.course
                 mRotation = mRotation
             };
             cloned.mStartingTrans = mStartingTrans;
-            cloned.mAreaHash = mAreaHash;
+            cloned.mAreaHash = areaTo.mRootHash;
             cloned.mHash = (ulong)(new Random().NextDouble() * ulong.MaxValue);
             cloned.mActorParameters = mActorParameters.Clone();
             cloned.mSystemParameters = mSystemParameters.Clone();
