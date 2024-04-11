@@ -94,6 +94,7 @@ namespace Fushigi.rstb
             }
             catch (IOException e)
             {
+                Logger.Logger.LogError(e);
                 //Likely due to the course being open in the game, caught to prevent crash
                 //TODO: notify the user
             }

@@ -5,17 +5,12 @@ using Fushigi.util;
 using Silk.NET.OpenGL;
 using System.Diagnostics;
 using System.Numerics;
-using System.Reflection;
 using static Fushigi.course.CourseUnit;
 
 namespace Fushigi.gl.Bfres
 {
     public class TileBfresRender
     {
-        private TileParamBlock TileParams;
-
-        private BfresRender BfresRender;
-        private Matrix4x4 Transform = Matrix4x4.Identity;
         private SkinDivision mSkinDivision;
 
         public record struct MaterialNames(string? Edge, string? Wall, string? Ground);

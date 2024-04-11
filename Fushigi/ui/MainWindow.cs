@@ -52,39 +52,36 @@ namespace Fushigi.ui
                         iconConfig->GlyphOffset = new Vector2(0);
 
                         float size = 16;
+                        mDefaultFont = io.Fonts.AddFontFromFileTTF(
+                            Path.Combine("res", "Font.ttf"),
+                            size, nativeConfig, io.Fonts.GetGlyphRangesDefault());
 
+                        io.Fonts.AddFontFromFileTTF(
+                           Path.Combine("res", "NotoSansCJKjp-Medium.otf"),
+                               size, nativeConfigJP, io.Fonts.GetGlyphRangesJapanese());
+
+                        //other fonts go here and follow the same schema
+                        GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { IconUtil.MIN_GLYPH_RANGE, IconUtil.MAX_GLYPH_RANGE, 0 }, GCHandleType.Pinned);
+                        try
                         {
-                            mDefaultFont = io.Fonts.AddFontFromFileTTF(
-                                Path.Combine("res", "Font.ttf"),
-                                size, nativeConfig, io.Fonts.GetGlyphRangesDefault());
+                            io.Fonts.AddFontFromFileTTF(
+                                Path.Combine("res", "la-regular-400.ttf"),
+                                size, iconConfig, rangeHandle.AddrOfPinnedObject());
 
-                             io.Fonts.AddFontFromFileTTF(
-                                Path.Combine("res", "NotoSansCJKjp-Medium.otf"),
-                                    size, nativeConfigJP, io.Fonts.GetGlyphRangesJapanese());
+                            io.Fonts.AddFontFromFileTTF(
+                                Path.Combine("res", "la-solid-900.ttf"),
+                                size, iconConfig, rangeHandle.AddrOfPinnedObject());
 
-                            //other fonts go here and follow the same schema
-                            GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { IconUtil.MIN_GLYPH_RANGE, IconUtil.MAX_GLYPH_RANGE, 0 }, GCHandleType.Pinned);
-                            try
-                            {
-                                io.Fonts.AddFontFromFileTTF(
-                                    Path.Combine("res", "la-regular-400.ttf"),
-                                    size, iconConfig, rangeHandle.AddrOfPinnedObject());
+                            io.Fonts.AddFontFromFileTTF(
+                                Path.Combine("res", "la-brands-400.ttf"),
+                                size, iconConfig, rangeHandle.AddrOfPinnedObject());
 
-                                io.Fonts.AddFontFromFileTTF(
-                                    Path.Combine("res", "la-solid-900.ttf"),
-                                    size, iconConfig, rangeHandle.AddrOfPinnedObject());
-
-                                io.Fonts.AddFontFromFileTTF(
-                                    Path.Combine("res", "la-brands-400.ttf"),
-                                    size, iconConfig, rangeHandle.AddrOfPinnedObject());
-
-                                io.Fonts.Build();
-                            }
-                            finally
-                            {
-                                if (rangeHandle.IsAllocated)
-                                    rangeHandle.Free();
-                            }
+                            io.Fonts.Build();
+                        }
+                        finally
+                        {
+                            if (rangeHandle.IsAllocated)
+                                rangeHandle.Free();
                         }
                     }
                 });
@@ -105,9 +102,7 @@ namespace Fushigi.ui
                     return true;
                 }
                 else
-                {
                     return false;
-                }
             }
 
             return true;
@@ -132,7 +127,6 @@ namespace Fushigi.ui
                     mSkipCloseTest = true;
                     mWindow.Close();
                 }
-
             }).ConfigureAwait(false); //fire and forget
         }
 
@@ -175,7 +169,6 @@ namespace Fushigi.ui
 
                     await LoadParamDBWithProgressBar(this);
                     await Task.Delay(500); 
-                    
                 }
 
                 string? latestCourse = UserSettings.GetLatestCourse();

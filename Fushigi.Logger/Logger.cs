@@ -1,4 +1,6 @@
-﻿namespace Fushigi.Logger
+﻿using System;
+
+namespace Fushigi.Logger
 {
     public static class Logger
     {
@@ -41,10 +43,7 @@
             if (e.ExceptionObject is not Exception exception) return;
 
             Console.ForegroundColor = ConsoleColor.Red;
-            if (exception.StackTrace == null)
-                Log(exception.Message);
-            else
-                Log($"[ERROR] {exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}");
+            LogError(exception);
             Console.ForegroundColor = ConsoleColor.White;
 
             Environment.Exit(1);
@@ -76,6 +75,14 @@
             Console.ForegroundColor = ConsoleColor.Red;
             Log($"[ERROR] [{from}]: {msg}");
             Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        public static void LogError(Exception e)
+        {
+            if (e.StackTrace == null)
+                Log(e.Message);
+            else
+                Log($"[ERROR] {e.GetType().Name}: {e.Message}\n{e.StackTrace}");
         }
     }
 }
