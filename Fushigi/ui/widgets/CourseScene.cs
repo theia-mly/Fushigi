@@ -1644,6 +1644,7 @@ namespace Fushigi.ui.widgets
 
             ImGui.Text("Select a Wall");
             ImGui.Text("Alt + Left Click to add point");
+            ImGui.Text("Delete to remove point");
 
             if (ImGui.Button("Add Tile Unit", new Vector2(100, 22)))
             {
@@ -1839,11 +1840,16 @@ namespace Fushigi.ui.widgets
         {
             var editContext = areaScenes[selectedArea].EditContext;
 
+            ImGui.Text("Select a Rail");
+            ImGui.Text("Alt + Left Click to add point");
+            ImGui.Text("Double click to add/remove a curve point");
+            ImGui.Text("Delete to remove point");
+
             if (ImGui.Button("Add Rail"))
-            {
                 railHolder.mRails.Add(new CourseRail(this.selectedArea.mRootHash));
-            }
+
             ImGui.SameLine();
+
             if (ImGui.Button("Remove Rail"))
             {
                 var selected = editContext.GetSelectedObjects<CourseRail>();
@@ -1853,7 +1859,7 @@ namespace Fushigi.ui.widgets
 
             foreach (CourseRail rail in railHolder.mRails)
             {
-                var rail_node_flags = ImGuiTreeNodeFlags.OpenOnArrow;
+                var rail_node_flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.DefaultOpen;
                 if (editContext.IsSelected(rail) &&
                     !editContext.IsAnySelected<CourseRail.CourseRailPoint>())
                 {

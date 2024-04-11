@@ -1,7 +1,6 @@
 using Fasterflect;
 using Fushigi.actor_pack.components;
 using Fushigi.Bfres;
-using Fushigi.Byml;
 using Fushigi.Byml.Serializer;
 using Fushigi.course;
 using Fushigi.course.distance_view;
@@ -702,7 +701,7 @@ namespace Fushigi.ui.widgets
 
             if (hoveredActor != null && 
                 mObjectPickingRequest == null && mPositionPickingRequest == null) //prevents tooltip flickering
-                ImGui.SetTooltip($"{hoveredActor.mPackName}");
+                ImGui.SetTooltip($"{hoveredActor.mPackName}\n{hoveredActor.mName}");
 
             if (ImGui.IsKeyPressed(ImGuiKey.Z) && modifiers == KeyboardModifier.CtrlCmd)
             {
@@ -1030,7 +1029,7 @@ namespace Fushigi.ui.widgets
                 dragRelease = false;
             }
 
-            if (ImGui.IsKeyPressed(ImGuiKey.Delete))
+            if (ImGui.IsKeyPressed(ImGuiKey.Delete) || ImGui.IsKeyPressed(ImGuiKey.Backspace))
                 ObjectDeletionRequested?.Invoke(mEditContext.GetSelectedObjects<CourseActor>().ToList());
 
             if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? point) &&
@@ -1184,7 +1183,7 @@ namespace Fushigi.ui.widgets
                     }
 
                     //Delete selected
-                    if (selectedPoint != null && ImGui.IsKeyPressed(ImGuiKey.Delete))
+                    if (selectedPoint != null && (ImGui.IsKeyPressed(ImGuiKey.Delete) || ImGui.IsKeyPressed(ImGuiKey.Backspace)))
                     {
                             rail.mPoints.Remove(selectedPoint);
                     }
@@ -1355,16 +1354,10 @@ namespace Fushigi.ui.widgets
                             actor.mTranslation.Z
                         ); ;
 
-                    uint color = ImGui.ColorConvertFloat4ToU32(new(0.5f, 1, 0, 1));
 
-                    if (actor.mPackName.Contains("CameraArea") || 
-                        (actor.mActorPack?.Category == "AreaObj" && actor.mActorPack?.ShapeParams == null))
-                    {
-                        if (actor.mPackName.Contains("CameraArea"))
-                            color = ImGui.ColorConvertFloat4ToU32(new(1, 0, 0, 1));
-                            
+                    if (actor.mType == CourseActorType.Area && actor.mActorPack?.ShapeParams == null)
                         off = new(0, .5f, 0);
-                    }
+
                     //topLeft
                     s_actorRectPolygon[0] = WorldToScreen(Vector3.Transform(new Vector3(min.X, max.Y, 0)+off, transform));
                     //topRight
@@ -1374,10 +1367,9 @@ namespace Fushigi.ui.widgets
                     //bottomLeft
                     s_actorRectPolygon[3] = WorldToScreen(Vector3.Transform(new Vector3(min.X, min.Y, 0)+off, transform));
 
-                    if (mEditContext.IsSelected(actor))
-                    {
-                        color = ImGui.ColorConvertFloat4ToU32(new(0.84f, .437f, .437f, 1));
-                    }
+                    uint color = CourseActor.CourseActorColors[CourseActorType.None];
+                    if (CourseActor.CourseActorColors.TryGetValue(actor.mType, out uint value))
+                        color = value;
 
                     bool isHovered = mHoveredObject == actor;
 

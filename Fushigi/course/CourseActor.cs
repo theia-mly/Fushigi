@@ -2,20 +2,43 @@
 using Fushigi.Byml.Writer;
 using Fushigi.param;
 using Fushigi.util;
+using ImGuiNET;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Fushigi.course
 {
-    public enum WonderViewType{
+    public enum WonderViewType
+    {
         Normal,
         WonderOff,
         WonderOnly
     }
+    public enum CourseActorType
+    {
+        None,
+        Tag,
+        Area,
+        Block,
+        BgUnit,
+        DV,
+        Enemy,
+        Event,
+        Item,
+        MapObj,
+        Object,
+        Sound,
+        Unit,
+        WMap,
+        WObj,
+        WorldMap
+    }
+
     public class CourseActor
     {
         public CourseActor(BymlHashTable actorNode)
         {
             mPackName = BymlUtil.GetNodeData<string>(actorNode["Gyaml"]);
+            mType = GetActorTypeFromGyaml(mPackName);
             mLayer = BymlUtil.GetNodeData<string>(actorNode["Layer"]);
 
             mTranslation = BymlUtil.GetVector3FromArray(actorNode["Translate"] as BymlArrayNode);
@@ -102,6 +125,7 @@ namespace Fushigi.course
         public CourseActor(string packName, uint areaHash, string actorLayer)
         {
             mPackName = packName;
+            mType = GetActorTypeFromGyaml(packName);
             mAreaHash = areaHash;
             mLayer = actorLayer;
             mName = "";
@@ -217,6 +241,43 @@ namespace Fushigi.course
             return table;
         }
 
+        public static CourseActorType GetActorTypeFromGyaml(string gyaml)
+        {
+            gyaml = gyaml.ToLower();
+            if (gyaml.EndsWith("tag"))
+                return CourseActorType.Tag;
+            if (gyaml.StartsWith("area") || gyaml.EndsWith("area"))
+                return CourseActorType.Area;
+            if (gyaml.StartsWith("block"))
+                return CourseActorType.Block;
+            if (gyaml.StartsWith("bgunit"))
+                return CourseActorType.BgUnit;
+            if (gyaml.StartsWith("dv"))
+                return CourseActorType.DV;
+            if (gyaml.StartsWith("enemy"))
+                return CourseActorType.Enemy;
+            if (gyaml.StartsWith("event"))
+                return CourseActorType.Event;
+            if (gyaml.StartsWith("item"))
+                return CourseActorType.Item;
+            if (gyaml.StartsWith("mapobj"))
+                return CourseActorType.MapObj;
+            if (gyaml.StartsWith("object"))
+                return CourseActorType.Object;
+            if (gyaml.StartsWith("sound"))
+                return CourseActorType.Sound;
+            if (gyaml.StartsWith("unit"))
+                return CourseActorType.Unit;
+            if (gyaml.StartsWith("wmap"))
+                return CourseActorType.WMap;
+            if (gyaml.StartsWith("wobj"))
+                return CourseActorType.WObj;
+            if (gyaml.StartsWith("worldmap"))
+                return CourseActorType.WorldMap;
+
+            return CourseActorType.None;
+        }
+
         public CourseActor Clone()
         {
             CourseActor cloned = new(mPackName, mAreaHash, mLayer)
@@ -245,6 +306,7 @@ namespace Fushigi.course
         public string mName;
         public string mLayer;
         public WonderViewType mWonderView = WonderViewType.Normal;
+        public CourseActorType mType = CourseActorType.None;
         public bool wonderVisible = true;
         public System.Numerics.Vector3 mStartingTrans;
         public System.Numerics.Vector3 mTranslation;
@@ -256,6 +318,24 @@ namespace Fushigi.course
         public PropertyDict mSystemParameters = PropertyDict.Empty;
 
         public ActorPack mActorPack;
+
+        public static readonly Dictionary<CourseActorType, uint> CourseActorColors = new()
+        {
+            { CourseActorType.None, ImGui.ColorConvertFloat4ToU32(new(0.8f, 0.8f, 0.8f, 1)) },
+            { CourseActorType.Tag, ImGui.ColorConvertFloat4ToU32(new(1, 0.55f, 0, 1)) },
+            { CourseActorType.Area, ImGui.ColorConvertFloat4ToU32(new(0.84f, .437f, .437f, 1)) },
+            { CourseActorType.Block, ImGui.ColorConvertFloat4ToU32(new(0.65f, 0.43f, 0.23f, 1)) },
+            { CourseActorType.BgUnit, ImGui.ColorConvertFloat4ToU32(new(1, 0, 0, 1)) },
+            { CourseActorType.Enemy, ImGui.ColorConvertFloat4ToU32(new(0.5f, 1, 0, 1)) },
+            { CourseActorType.Event, ImGui.ColorConvertFloat4ToU32(new(1, 0.7f, 0, 1)) },
+            { CourseActorType.DV, ImGui.ColorConvertFloat4ToU32(new(0, 0, 0.7f, 1)) },
+            { CourseActorType.Item, ImGui.ColorConvertFloat4ToU32(new(0, 0.59f, 1, 1)) },
+            { CourseActorType.MapObj, ImGui.ColorConvertFloat4ToU32(new(0.85f, 0.63f, 0.43f, 1)) },
+            { CourseActorType.WObj, ImGui.ColorConvertFloat4ToU32(new(0.85f, 0.63f, 0.43f, 1)) },
+            { CourseActorType.WMap, ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) },
+            { CourseActorType.Object, ImGui.ColorConvertFloat4ToU32(new(0.65f, 0.43f, 0.23f, 1)) },
+            { CourseActorType.Sound, ImGui.ColorConvertFloat4ToU32(new(0.36f, 0.25f, 0.83f, 1)) },
+        };
     }
 
     public class CourseActorHolder
