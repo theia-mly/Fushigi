@@ -414,14 +414,17 @@ namespace Fushigi.ui.widgets
 
                     ImGui.SameLine();
 
+                    float fps = 1.0f / ImGui.GetIO().DeltaTime;
+                    fps = (float)Math.Round(fps, 0);
+
                     //Display Mouse Position  
                     if (ImGui.IsMouseHoveringRect(topLeft, topLeft + size))
                     {
                         var _mousePos = activeViewport.ScreenToWorld(ImGui.GetMousePos());
-                        ImGui.Text("X: " + Math.Round(_mousePos.X, 3) + "\nY: " + Math.Round(_mousePos.Y, 3));
+                        ImGui.Text("X: " + Math.Round(_mousePos.X, 3) + "\nY: " + Math.Round(_mousePos.Y, 3) + "\nFPS: " + fps);
                     }
                     else
-                        ImGui.Text("X:\nY:");
+                        ImGui.Text("X:\nY:\nFPS: " + fps);
 
                     //Fixed popup pos, render popup
                     //var pos = ImGui.GetCursorScreenPos();
@@ -2660,15 +2663,18 @@ namespace Fushigi.ui.widgets
                     }
                 }
 
-                var result = await OperationWarningDialog.ShowDialog(mPopupModalHost,
-                "Deletion warning",
-                "The object(s) you are about to delete " +
-                "are being used in other places",
-                ("As link source for", srcMsgStrs),
-                ("As link destination for", dstMsgStrs));
+                if (dstMsgStrs.Count > 0 || srcMsgStrs.Count > 0)
+                {
+                    var result = await OperationWarningDialog.ShowDialog(mPopupModalHost,
+                    "Deletion warning",
+                    "The object(s) you are about to delete " +
+                    "are being used in other places",
+                    ("As link source for", srcMsgStrs),
+                    ("As link destination for", dstMsgStrs));
 
-                if (result == OperationWarningDialog.DialogResult.Cancel)
-                    return;
+                    if (result == OperationWarningDialog.DialogResult.Cancel)
+                        return;
+                }
             }
 
             var batchAction = ctx.BeginBatchAction();
