@@ -323,17 +323,17 @@ namespace Fushigi.course
         {
             { CourseActorType.None, ImGui.ColorConvertFloat4ToU32(new(0.8f, 0.8f, 0.8f, 1)) },
             { CourseActorType.Tag, ImGui.ColorConvertFloat4ToU32(new(1, 0.55f, 0, 1)) },
-            { CourseActorType.Area, ImGui.ColorConvertFloat4ToU32(new(0.84f, .437f, .437f, 1)) },
-            { CourseActorType.Block, ImGui.ColorConvertFloat4ToU32(new(0.65f, 0.43f, 0.23f, 1)) },
-            { CourseActorType.BgUnit, ImGui.ColorConvertFloat4ToU32(new(1, 0, 0, 1)) },
+            { CourseActorType.Area, ImGui.ColorConvertFloat4ToU32(new(1, 0, 0, 1)) },
+            { CourseActorType.Block, ImGui.ColorConvertFloat4ToU32(new(0.125f, 0.976f, 0.988f, 1)) },
+            { CourseActorType.BgUnit, ImGui.ColorConvertFloat4ToU32(new(0.84f, .437f, .437f, 1)) },
             { CourseActorType.Enemy, ImGui.ColorConvertFloat4ToU32(new(0.5f, 1, 0, 1)) },
             { CourseActorType.Event, ImGui.ColorConvertFloat4ToU32(new(1, 0.7f, 0, 1)) },
             { CourseActorType.DV, ImGui.ColorConvertFloat4ToU32(new(0, 0, 0.7f, 1)) },
-            { CourseActorType.Item, ImGui.ColorConvertFloat4ToU32(new(0, 0.59f, 1, 1)) },
+            { CourseActorType.Item, ImGui.ColorConvertFloat4ToU32(new(0.988f, 0.125f, 0.941f, 1)) },
             { CourseActorType.MapObj, ImGui.ColorConvertFloat4ToU32(new(0.85f, 0.63f, 0.43f, 1)) },
             { CourseActorType.WObj, ImGui.ColorConvertFloat4ToU32(new(0.85f, 0.63f, 0.43f, 1)) },
             { CourseActorType.WMap, ImGui.ColorConvertFloat4ToU32(new(1, 1, 0, 1)) },
-            { CourseActorType.Object, ImGui.ColorConvertFloat4ToU32(new(0.65f, 0.43f, 0.23f, 1)) },
+            { CourseActorType.Object, ImGui.ColorConvertFloat4ToU32(new(0.125f, 0.976f, 0.988f, 1)) },
             { CourseActorType.Sound, ImGui.ColorConvertFloat4ToU32(new(0.36f, 0.25f, 0.83f, 1)) },
         };
     }
