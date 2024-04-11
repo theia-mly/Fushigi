@@ -1430,7 +1430,21 @@ namespace Fushigi.ui.widgets
             }
 
             if (mMultiSelecting && mMultiSelectStartPos != null && mMultiSelectCurrentPos != null)
-                mDrawList.AddRect(mMultiSelectStartPos.Value, mMultiSelectCurrentPos.Value, MultiSelectBoxColor, 2f, ImDrawFlags.RoundCornersAll, MultiSelectBoxThickness);
+            {
+                Vector2 pMin = mMultiSelectStartPos.Value;
+                Vector2 pMax = mMultiSelectCurrentPos.Value;
+                if (mMultiSelectCurrentPos.Value.X < mMultiSelectStartPos.Value.X)
+                {
+                    pMax.X = mMultiSelectStartPos.Value.X;
+                    pMin.X = mMultiSelectCurrentPos.Value.X;
+                }
+                if (mMultiSelectCurrentPos.Value.Y < mMultiSelectStartPos.Value.Y)
+                {
+                    pMax.Y = mMultiSelectStartPos.Value.Y;
+                    pMin.Y = mMultiSelectCurrentPos.Value.Y;
+                }
+                mDrawList.AddRect(pMin, pMax, MultiSelectBoxColor, 2f, ImDrawFlags.RoundCornersAll, MultiSelectBoxThickness);
+            }
 
             mHoveredObject = newHoveredObject;
         }
