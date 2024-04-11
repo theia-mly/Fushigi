@@ -246,7 +246,7 @@ namespace Fushigi.course
             gyaml = gyaml.ToLower();
             if (gyaml.EndsWith("tag"))
                 return CourseActorType.Tag;
-            if (gyaml.StartsWith("area") || gyaml.EndsWith("area"))
+            if (gyaml.Contains("area"))
                 return CourseActorType.Area;
             if (gyaml.StartsWith("block"))
                 return CourseActorType.Block;
