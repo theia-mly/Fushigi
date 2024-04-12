@@ -275,7 +275,7 @@ namespace Fushigi.ui.widgets
         public void DrawScene3D(Vector2 size, IDictionary<string, bool> layersVisibility)
         {
             if (mIsNoMoreRendering)
-                goto SKIP_RENDERING; //sue me
+                goto SKIP_RENDERING; //sue me // ok
 
             mLayersVisibility = layersVisibility;
 
@@ -315,56 +315,59 @@ namespace Fushigi.ui.widgets
             //Start drawing the scene. Bfres draw upside down so flip the viewport clip
             gl.ClipControl(ClipControlOrigin.UpperLeft, ClipControlDepth.ZeroToOne);
 
-            //TODO put this somewhere else and maybe cache this
-            TileBfresRender CreateTileRendererForSkin(SkinDivision division, string skinName)
+            if (!CourseScene.HideWalls)
             {
-                var bootupPack = RomFS.GetOrLoadBootUpPack();
-
-                var bytes = bootupPack.OpenFile(
-                    "System/CombinationDataTableData/DefaultBgUnitSkinConfigTable.pp__CombinationDataTableData.bgyml");
-                var table = BymlSerialize.Deserialize<DefaultBgUnitSkinConfigTable>(bytes);
-
-
-                var render = new TileBfresRender(gl,
-                    new TileBfresRender.UnitPackNames(
-                        FullHit: table.GetPackName(skinName, "FullHit"),
-                        HalfHit: table.GetPackName(skinName, "HalfHit"),
-                        NoHit: table.GetPackName(skinName, "NoHit"),
-                        Bridge: table.GetPackName(skinName, "Bridge")
-                    ), division);
-                render.Load(this.mArea.mUnitHolder);
-
-                return render;
-            }
-            string? fieldASkin = mArea.mAreaParams.SkinParam?.FieldA;
-            string? fieldBSkin = mArea.mAreaParams.SkinParam?.FieldB;
-
-            if (TileBfresRenderFieldA == null && !string.IsNullOrEmpty(fieldASkin))
-                TileBfresRenderFieldA = CreateTileRendererForSkin(SkinDivision.FieldA, fieldASkin);
-
-            if (TileBfresRenderFieldB == null && !string.IsNullOrEmpty(fieldBSkin))
-                TileBfresRenderFieldB = CreateTileRendererForSkin(SkinDivision.FieldB, fieldBSkin);
-
-            //continuously register all course units that haven't been registered yet
-            foreach (var courseUnit in mArea.mUnitHolder.mUnits)
-            {
-                if (mRegisteredUnits.Contains(courseUnit))
-                    continue;
-
-                if (courseUnit.mSkinDivision == SkinDivision.FieldA && TileBfresRenderFieldA is not null)
+                //TODO put this somewhere else and maybe cache this
+                TileBfresRender CreateTileRendererForSkin(SkinDivision division, string skinName)
                 {
-                    courseUnit.TilesUpdated += () => TileBfresRenderFieldA.Load(this.mArea.mUnitHolder);
+                    var bootupPack = RomFS.GetOrLoadBootUpPack();
+
+                    var bytes = bootupPack.OpenFile(
+                        "System/CombinationDataTableData/DefaultBgUnitSkinConfigTable.pp__CombinationDataTableData.bgyml");
+                    var table = BymlSerialize.Deserialize<DefaultBgUnitSkinConfigTable>(bytes);
+
+
+                    var render = new TileBfresRender(gl,
+                        new TileBfresRender.UnitPackNames(
+                            FullHit: table.GetPackName(skinName, "FullHit"),
+                            HalfHit: table.GetPackName(skinName, "HalfHit"),
+                            NoHit: table.GetPackName(skinName, "NoHit"),
+                            Bridge: table.GetPackName(skinName, "Bridge")
+                        ), division);
+                    render.Load(this.mArea.mUnitHolder);
+
+                    return render;
                 }
-                else if (courseUnit.mSkinDivision == SkinDivision.FieldB && TileBfresRenderFieldB is not null)
+                string? fieldASkin = mArea.mAreaParams.SkinParam?.FieldA;
+                string? fieldBSkin = mArea.mAreaParams.SkinParam?.FieldB;
+
+                if (TileBfresRenderFieldA == null && !string.IsNullOrEmpty(fieldASkin))
+                    TileBfresRenderFieldA = CreateTileRendererForSkin(SkinDivision.FieldA, fieldASkin);
+
+                if (TileBfresRenderFieldB == null && !string.IsNullOrEmpty(fieldBSkin))
+                    TileBfresRenderFieldB = CreateTileRendererForSkin(SkinDivision.FieldB, fieldBSkin);
+
+                //continuously register all course units that haven't been registered yet
+                foreach (var courseUnit in mArea.mUnitHolder.mUnits)
                 {
-                    courseUnit.TilesUpdated += () => TileBfresRenderFieldB.Load(this.mArea.mUnitHolder);
+                    if (mRegisteredUnits.Contains(courseUnit))
+                        continue;
+
+                    if (courseUnit.mSkinDivision == SkinDivision.FieldA && TileBfresRenderFieldA is not null)
+                    {
+                        courseUnit.TilesUpdated += () => TileBfresRenderFieldA.Load(this.mArea.mUnitHolder);
+                    }
+                    else if (courseUnit.mSkinDivision == SkinDivision.FieldB && TileBfresRenderFieldB is not null)
+                    {
+                        courseUnit.TilesUpdated += () => TileBfresRenderFieldB.Load(this.mArea.mUnitHolder);
+                    }
+
+                    mRegisteredUnits.Add(courseUnit);
                 }
 
-                mRegisteredUnits.Add(courseUnit);
+                TileBfresRenderFieldA?.Render(gl, this.Camera);
+                TileBfresRenderFieldB?.Render(gl, this.Camera);
             }
-
-            TileBfresRenderFieldA?.Render(gl, this.Camera);
-            TileBfresRenderFieldB?.Render(gl, this.Camera);
 
             //Display skybox
             EnvironmentData.RenderSky(gl, this.Camera);
@@ -725,7 +728,7 @@ namespace Fushigi.ui.widgets
             }
             bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
             bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
-            if (CopiedObjects.Length != 0 &&
+            if (CopiedObjects.Length != 0 && ImGui.IsWindowHovered() &&
                 ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift)
             {
                 DoPaste(freshCopy: ctrlAndShift);

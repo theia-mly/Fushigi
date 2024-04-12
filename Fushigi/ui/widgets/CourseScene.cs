@@ -43,6 +43,11 @@ namespace Fushigi.ui.widgets
         bool mAllLayersVisible = true;
         readonly List<IToolWindow> mOpenToolWindows = [];
 
+        // this is a very bad fix bc im waiting
+        // to work on jupahe's editor instead of
+        // fushigi.
+        public static bool HideWalls;
+
         string mActorSearchText = "";
 
         //CourseLink? mSelectedGlobalLink = null;
@@ -1652,6 +1657,8 @@ namespace Fushigi.ui.widgets
             ImGui.Text("Select a Wall");
             ImGui.Text("Alt + Left Click to add point");
             ImGui.Text("Delete to remove point");
+
+            ImGui.Checkbox("Hide Walls", ref HideWalls);
 
             if (ImGui.Button("Add Tile Unit", new Vector2(100, 22)))
             {

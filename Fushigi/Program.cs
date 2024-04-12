@@ -8,7 +8,7 @@ using Fushigi;
 
 internal class Program
 {
-    public const string Version = "v1.1.5.5";
+    public const string Version = "v1.1.5.6";
 
     public static MainWindow MainWindow { get; private set; }
 
