@@ -8,7 +8,9 @@ using Fushigi;
 
 internal class Program
 {
-    public const string Version = "v1.1.5.3";
+    public const string Version = "v1.1.5.4";
+
+    public static MainWindow MainWindow { get; private set; }
 
     private static void Main(string[] args)
     {
@@ -40,7 +42,7 @@ internal class Program
 
         DRPC.Initialize();
 
-        _ = new MainWindow();
+        MainWindow = new MainWindow();
         WindowManager.Run();
 
         Logger.CloseLogger();

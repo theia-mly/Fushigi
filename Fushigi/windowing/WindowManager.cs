@@ -5,9 +5,6 @@ using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using SixLabors.ImageSharp.Advanced;
-using SixLabors.ImageSharp.PixelFormats;
-using System.Runtime.InteropServices;
 
 namespace Fushigi.windowing
 {
@@ -24,7 +21,7 @@ namespace Fushigi.windowing
         private static readonly List<IWindow> sPendingInits = [];
         private static readonly List<(IWindow window, WindowResources res)> sWindows = [];
 
-        public static unsafe void CreateWindow(out IWindow window, Vector2D<int>? initialWindowSize = null, Action? onConfigureIO = null)
+        public static void CreateWindow(out IWindow window, Vector2D<int>? initialWindowSize = null, Action? onConfigureIO = null)
         {
             var options = WindowOptions.Default;
             options.Title = $"Fushigi {Program.Version}";
@@ -57,20 +54,6 @@ namespace Fushigi.windowing
 
                 //update
                 _window.Update += ds => imguiController.Update((float)ds);
-
-                Logger.Logger.LogMessage("WindowManager", "Loading icon");
-                using var image = SixLabors.ImageSharp.Image.Load<Rgba32>(Path.Combine("res", "Icon.png"));
-                var memoryGroup = image.GetPixelMemoryGroup();
-                Memory<byte> array = new byte[memoryGroup.TotalLength * sizeof(Rgba32)];
-                var block = MemoryMarshal.Cast<byte, Rgba32>(array.Span);
-                foreach (var memory in memoryGroup)
-                {
-                    memory.Span.CopyTo(block);
-                    block = block[memory.Length..];
-                }
-
-                var icon = new RawImage(image.Width, image.Height, array);
-                _window.SetWindowIcon(ref icon);
 
                 sWindows.Add((_window, new WindowResources(imguiController, input, sGL, false)));
             };

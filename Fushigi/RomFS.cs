@@ -77,8 +77,8 @@ namespace Fushigi
             var path = Path.Combine(GetRoot(), "Mals", "USen.Product.100.sarc.zs");
 
 
-            Dictionary<string, string> courseNames = new();
-            Dictionary<string, string> worldNames = new();
+            Dictionary<string, string> courseNames = [];
+            Dictionary<string, string> worldNames = [];
 
             if (File.Exists(path))
             {
@@ -104,8 +104,10 @@ namespace Fushigi
                 if (worldNames.TryGetValue(worldKey, out string? value))
                     worldEntry.name = value;
 
+                Logger.Logger.LogMessage("RomFS", worldName);
+
                 Dictionary<string, WorldEntry.CourseEntry> courseLocationList = new();
-                Byml.Byml byml = new Byml.Byml(new MemoryStream(File.ReadAllBytes(loadFile)));
+                Byml.Byml byml = new(new MemoryStream(File.ReadAllBytes(loadFile)));
                 var root = (BymlHashTable)byml.Root;
                 var courseList = (BymlArrayNode)root["CourseTable"];
                 for (int i = 0; i < courseList.Length; i++)
@@ -122,15 +124,15 @@ namespace Fushigi
                         courseNames.TryGetValue(courseInfo.CourseNameLabel, out string? courseName))
                     {
                         courseEntry.name = courseName;
-                        if (!CourseNames.ContainsKey(courseInfo.GlobalCourseId))
-                            CourseNames.Add(courseInfo.GlobalCourseId, courseName);
+                        CourseNames.TryAdd(courseInfo.GlobalCourseId, courseName);
                     }
                     else
                     {
                         courseEntry.name = "Name not found";
-                        if (!CourseNames.ContainsKey(courseInfo.GlobalCourseId))
-                            CourseNames.Add(courseInfo.GlobalCourseId, courseEntry.name);
+                        CourseNames.TryAdd(courseInfo.GlobalCourseId, courseEntry.name);
                     }
+
+                    CourseWorlds.TryAdd(courseInfo.GlobalCourseId, int.Parse(worldName.Split("World")[1]));
 
                     courseLocationList.Add(courseLocation, courseEntry);
                 }
@@ -144,9 +146,7 @@ namespace Fushigi
         public static void CacheCourseThumbnails(GL gl)
         {
             foreach (var world in sCourseEntries.Keys)
-            {
                 CacheCourseThumbnails(gl, world);
-            }
         }
 
         public static void CacheCourseThumbnails(GL gl, string world)
@@ -157,9 +157,7 @@ namespace Fushigi
             {
                 // Skip the process if this course's thumbnail is already cached
                 if (sCourseEntries[world].courseEntries![course].thumbnail != null)
-                {
                     continue;
-                }
 
                 var path = Path.Combine(thumbnailFolder, $"{course}.bntx.zs");
 
@@ -193,5 +191,6 @@ namespace Fushigi
         private static string sRomFSRoot = "";
         private static readonly Dictionary<string, WorldEntry> sCourseEntries = [];
         public static readonly Dictionary<int, string> CourseNames = [];
+        public static readonly Dictionary<int, int> CourseWorlds = [];
     }
 }

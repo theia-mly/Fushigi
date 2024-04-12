@@ -32,7 +32,7 @@ namespace Fushigi
             mClient?.Dispose();
         }
 
-        static void SetPresence(string details, string state)
+        static void SetPresence(string details, string state, string imageKey)
         {
             if (mClient == null)
             {
@@ -46,7 +46,7 @@ namespace Fushigi
                 State = state,
                 Assets = new Assets()
                 {
-                    LargeImageKey = "icon",
+                    LargeImageKey = imageKey,
                     LargeImageText = "Fushigi"
                 },
                 Timestamps = new Timestamps()
@@ -56,9 +56,9 @@ namespace Fushigi
             });
         }
 
-        public static void SetEditingCourse(string courseID, string courseName)
+        public static void SetEditingCourse(string courseID, string courseName, int worldNumber)
         {
-            SetPresence($"Editing {courseID}", courseName);
+            SetPresence($"Editing {courseID}", courseName, "icon" + worldNumber);
         }
 
         class RPCLogger : ILogger

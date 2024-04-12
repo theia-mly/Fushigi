@@ -6,8 +6,11 @@ using Fushigi.ui.widgets;
 using Fushigi.util;
 using Fushigi.windowing;
 using ImGuiNET;
+using Silk.NET.Core;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.PixelFormats;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -21,14 +24,38 @@ namespace Fushigi.ui
         private ImFontPtr mDefaultFont;
         private readonly ImFontPtr mIconFont;
 
+        private static readonly Dictionary<int, RawImage> Icons = [];
+
         public MainWindow()
         {
+            Logger.Logger.LogMessage("MainWindow", "Loading icons");
+
+            unsafe
+            {
+                for (int i = 1; i < 10; i++)
+                {
+                    using var image = SixLabors.ImageSharp.Image.Load<Rgba32>(Path.Combine("res", $"icon{i}.png"));
+                    var memoryGroup = image.GetPixelMemoryGroup();
+                    Memory<byte> array = new byte[memoryGroup.TotalLength * sizeof(Rgba32)];
+                    var block = MemoryMarshal.Cast<byte, Rgba32>(array.Span);
+                    foreach (var memory in memoryGroup)
+                    {
+                        memory.Span.CopyTo(block);
+                        block = block[memory.Length..];
+                    }
+
+                    Icons.Add(i, new RawImage(image.Width, image.Height, array));
+                }
+            }
+
             WindowManager.CreateWindow(out mWindow,
                 onConfigureIO: () =>
                 {
                     Logger.Logger.LogMessage("MainWindow", "Initializing Window");
                     unsafe
                     {
+                        SetWindowIcon(1);
+
                         var io = ImGui.GetIO();
                         io.ConfigFlags = ImGuiConfigFlags.NavEnableKeyboard;
 
@@ -87,6 +114,12 @@ namespace Fushigi.ui
                 });
             mWindow.Load += () => WindowManager.RegisterRenderDelegate(mWindow, Render);
             mWindow.Closing += Close;
+        }
+
+        public void SetWindowIcon(int id)
+        {
+            var icon = Icons[id];
+            mWindow.SetWindowIcon(ref icon);
         }
 
         public async Task<bool> TryCloseCourse()

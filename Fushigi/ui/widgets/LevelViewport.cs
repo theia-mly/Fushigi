@@ -715,26 +715,29 @@ namespace Fushigi.ui.widgets
 
             CourseActor[] selectedActors = areaScene.EditContext.GetSelectedObjects<CourseActor>().ToArray();
 
-            if (selectedActors.Length != 0 &&
-                ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd)
+            if (ImGui.IsWindowHovered())
             {
-                CopiedObjects = new CourseActor[selectedActors.Length];
-                for (int i = 0; i < CopiedObjects.Length; i++)
-                    CopiedObjects[i] = selectedActors[i].Clone(mArea);
-            }
-            bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
-            bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
-            if (CopiedObjects.Length != 0 &&
-                ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift)
-            {
-                DoPaste(freshCopy: ctrlAndShift);
-            }
+                if (selectedActors.Length != 0 &&
+                    !ImGui.IsAnyItemActive() &&
+                    ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd)
+                {
+                    CopiedObjects = new CourseActor[selectedActors.Length];
+                    for (int i = 0; i < CopiedObjects.Length; i++)
+                        CopiedObjects[i] = selectedActors[i].Clone(mArea);
+                }
+                bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
+                bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
+                if (CopiedObjects.Length != 0 &&
+                    ImGui.IsKeyPressed(ImGuiKey.V) && ctrlOrCtrlShift)
+                {
+                    DoPaste(freshCopy: ctrlAndShift);
+                }
 
+                if (hoveredActor != null && ImGui.IsMouseClicked(0) && ctrlOrCtrlShift)
+                    DoImmediatePaste(freshCopy: ctrlAndShift);
+            }
             if (ImGui.IsWindowFocused())
                 InteractionWithFocus(modifiers);
-
-            if (hoveredActor != null && ImGui.IsMouseClicked(0) && ctrlOrCtrlShift)
-                DoImmediatePaste(freshCopy: ctrlAndShift);
 
             ImGui.PopClipRect();
         }

@@ -464,7 +464,11 @@ namespace Fushigi.ui.widgets
             if (int.TryParse(sCourseID, out int courseID))
             {
                 if (RomFS.CourseNames.TryGetValue(courseID, out string? courseName))
-                    DRPC.SetEditingCourse(selectedArea.GetName(), courseName);
+                {
+                    RomFS.CourseWorlds.TryGetValue(courseID, out int worldID);
+                    DRPC.SetEditingCourse(selectedArea.GetName(), courseName, worldID);
+                    Program.MainWindow.SetWindowIcon(worldID);
+                }
                 else
                     Logger.Logger.LogWarning("CourseScene", $"Failed to get course name for {course.GetName()}");
 
