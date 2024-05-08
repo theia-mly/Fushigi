@@ -24,6 +24,7 @@ namespace Fushigi.ui.widgets
                 var useGameShaders = UserSettings.UseGameShaders();
                 var useAstcTextureCache = UserSettings.UseAstcTextureCache();
                 var hideDeletingLinkedActorsPopup = UserSettings.HideDeletingLinkedActorsPopup();
+                var useNewCamera = UserSettings.GetUseNewCamera();
 
                 ImGui.Indent();
 
@@ -106,6 +107,11 @@ namespace Fushigi.ui.widgets
                 }
 
                 Tooltip.Show("Hides the warning popup when you delete actors with links.");
+
+                if (ImGui.Checkbox("Use New Camera [BETA!]", ref useNewCamera))
+                    UserSettings.SetUseNewCamera(useNewCamera);
+
+                Tooltip.Show("Uses a new camera system that aims to be more accurate.\nWARNING: in beta and might cause some issues");
 
                 ImGui.Unindent();
 

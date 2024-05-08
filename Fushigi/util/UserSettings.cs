@@ -28,6 +28,7 @@ namespace Fushigi.util
             public bool UseGameShaders;
             public bool UseAstcTextureCache;
             public bool HideDeletingLinkedActorsPopup;
+            public bool UseNewCamera;
 
             public Settings()
             {
@@ -38,6 +39,7 @@ namespace Fushigi.util
                 UseGameShaders = false;
                 UseAstcTextureCache = false;
                 HideDeletingLinkedActorsPopup = false;
+                UseNewCamera = true;
             }
         }
 
@@ -92,6 +94,12 @@ namespace Fushigi.util
             Save(); //save setting
         }
 
+        public static void SetUseNewCamera(bool newCamera)
+        {
+            AppSettings.UseNewCamera = newCamera;
+            Save();
+        }
+
         public static string GetRomFSPath()
         {
             return AppSettings.RomFSPath;
@@ -100,6 +108,11 @@ namespace Fushigi.util
         public static string GetModRomFSPath()
         {
             return AppSettings.RomFSModPath;
+        }
+
+        public static bool GetUseNewCamera()
+        {
+            return AppSettings.UseNewCamera;
         }
 
         public static void AppendModPath(string modname, string path)
