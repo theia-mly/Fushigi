@@ -18,12 +18,30 @@ namespace Fushigi.course
 {
     public class CourseRail
     {
-        public CourseRail(uint areaHash)
+        public CourseRail(uint areaHash, string type = "Default")
         {
+            mType = type;
             mHash = RandomUtil.GetRandom();
             mAreaHash = areaHash;
-            mRailParam = "Work/Gyml/Rail/RailParam/Default.game__rail__RailParam.gyml";
+            mRailParam = "Work/Gyml/Rail/RailParam/"+type+".game__rail__RailParam.gyml";
             mIsClosed = false;
+            var railParams = ParamDB.GetRailComponent(mType);
+            var railParent = ParamDB.GetRailComponentParent(railParams);
+            var comp = ParamDB.GetRailComponentParams(railParams);
+            if (railParent != "null")
+            {
+                var parentComp = ParamDB.GetRailComponentParams(railParent);
+                foreach (var component in parentComp)
+                {
+                    comp.TryAdd(component.Key, component.Value);
+                }
+            }
+
+            foreach (string component in comp.Keys)
+            {
+                var c = comp[component];
+                mParameters.Add(component, c.InitValue);
+            }
         }
 
         public CourseRail(BymlHashTable node)
@@ -33,8 +51,8 @@ namespace Fushigi.course
             mHash = BymlUtil.GetNodeData<ulong>(node["Hash"]);
             mIsClosed = BymlUtil.GetNodeData<bool>(node["IsClosed"]);
 
-            string pointParam = Path.GetFileNameWithoutExtension(BymlUtil.GetNodeData<string>(node["Gyaml"])).Split(".game")[0];
-            var railParams = ParamDB.GetRailComponent(pointParam);
+            mType = Path.GetFileNameWithoutExtension(BymlUtil.GetNodeData<string>(node["Gyaml"])).Split(".game")[0];
+            var railParams = ParamDB.GetRailComponent(mType);
             var railParent = ParamDB.GetRailComponentParent(railParams);
             var comp = ParamDB.GetRailComponentParams(railParams);
             if (railParent != "null")
@@ -76,7 +94,7 @@ namespace Fushigi.course
 
             foreach(BymlHashTable rail in railArray.Array)
             {
-                mPoints.Add(new CourseRailPoint(rail, pointParam));
+                mPoints.Add(new CourseRailPoint(rail, mType));
             }
         }
 
@@ -131,6 +149,7 @@ namespace Fushigi.course
         public uint mAreaHash;
         public string mRailParam;
         public ulong mHash;
+        public string mType;
         public bool mIsClosed;
         public List<CourseRailPoint> mPoints = new();
         public Dictionary<string, object> mParameters = new();

@@ -105,7 +105,19 @@ namespace Fushigi.ui.widgets
             "DvFar9",
             "DvFar10"
         ];
-        public static Regex NumberRegex = new(@"\d+");
+
+        public static readonly string[] RailTypes = [
+            "Default",
+            "NextGoTo",
+            "BadgeChallenge",
+            "CRing",
+            "Scroll",
+            "SectionFrame", 
+            "ShabonMove",
+            "SwitchON",
+            "SwitchOFF",
+        ];
+        public static readonly Regex NumberRegex = new(@"\d+");
 
         // This code sorts the layer order on the layer panel.
         // You can look through it before deciding if it's optimized enough to include.
@@ -1146,7 +1158,7 @@ namespace Fushigi.ui.widgets
             else if (editContext.IsSingleObjectSelected(out CourseRail? mSelectedRail))
             {
                 ImGui.AlignTextToFramePadding();
-                ImGui.Text($"Selected Rail");
+                ImGui.Text($"Selected {mSelectedRail.mType} Rail");
                 ImGui.NewLine();
                 ImGui.Separator();
 
@@ -1624,14 +1636,27 @@ namespace Fushigi.ui.widgets
                 removed_tile_units.Clear();
             }
         }
-
-        private void CourseRailsView(CourseRailHolder railHolder)
+        private async void CourseRailsView(CourseRailHolder railHolder)
         {
             var editContext = areaScenes[selectedArea].EditContext;
 
-            if (ImGui.Button("Add Rail"))
+            ImGui.Text("Select a Rail");
+            ImGui.Text("Alt + Left Click to add point");
+            ImGui.Text("Double click to add/remove a curve point");
+            ImGui.Text("Delete to remove point");
+
+            ImGui.SetNextWindowSize(ImGui.GetContentRegionAvail());
+            if (ImGui.BeginCombo("##Add Rail", "Add Rail"))
             {
-                railHolder.mRails.Add(new CourseRail(this.selectedArea.mRootHash));
+                foreach (string type in RailTypes)
+                {
+                    ImGui.Selectable(type);
+
+                    if (ImGui.IsItemHovered() && ImGui.IsMouseClicked(0))
+                        railHolder.mRails.Add(new CourseRail(this.selectedArea.mRootHash, type));
+                }
+
+                ImGui.EndCombo();
             }
             ImGui.SameLine();
             if (ImGui.Button("Remove Rail"))
