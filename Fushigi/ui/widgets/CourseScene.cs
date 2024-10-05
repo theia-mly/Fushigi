@@ -1303,7 +1303,15 @@ namespace Fushigi.ui.widgets
 
                         ImGui.TableNextColumn();
                             //Depth editing for bg unit. All points share the same depth, so batch edit the Z point
-                            float depth = mSelectedUnitRail.Points.Count == 0 ? 0 : mSelectedUnitRail.Points[0].Position.Z;
+                            float depth = mSelectedUnitRail.Points.Count == 0 ? 
+                                mSelectedUnitRail.mCourseUnit.mModelType switch{
+                                    CourseUnit.ModelType.Solid => 0,
+                                    CourseUnit.ModelType.SemiSolid => -2,
+                                    CourseUnit.ModelType.NoCollision => -4,
+                                    CourseUnit.ModelType.Bridge => -2,
+                                    _ => 0
+                                } 
+                                : mSelectedUnitRail.Points[0].Position.Z;
 
                             ImGui.Text("Z Depth"); ImGui.TableNextColumn();
                             if (ImGui.DragFloat("##Depth", ref depth, 0.1f))

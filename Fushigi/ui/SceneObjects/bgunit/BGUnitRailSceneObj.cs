@@ -123,7 +123,13 @@ namespace Fushigi.ui.SceneObjects.bgunit
             Vector3 pos = new(
                  MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
                  MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
-                 2);
+                 rail.mCourseUnit.mModelType switch{
+                    CourseUnit.ModelType.Solid => 0,
+                    CourseUnit.ModelType.SemiSolid => -2,
+                    CourseUnit.ModelType.NoCollision => -4,
+                    CourseUnit.ModelType.Bridge => -2,
+                    _ => 0
+                 });
 
             if (rail.Points.Count == 0)
                 return (pos, 0);
