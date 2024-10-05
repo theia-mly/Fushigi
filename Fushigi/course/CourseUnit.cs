@@ -214,7 +214,7 @@ namespace Fushigi.course
         public BGUnitRail(CourseUnit unit)
         {
             mCourseUnit = unit;
-            if (unit.mModelType == CourseUnit.ModelType.Bridge)
+            if (unit.mModelType == CourseUnit.ModelType.Bridge || unit.mModelType == CourseUnit.ModelType.SemiSolid)
                 IsClosed = false;
         }
 
