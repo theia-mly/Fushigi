@@ -1838,7 +1838,7 @@ namespace Fushigi.ui.widgets
                     if (unit.mModelType is CourseUnit.ModelType.SemiSolid or CourseUnit.ModelType.Bridge)
                     {
                         if (ImGui.Button("Add Belt"))
-                            editContext.AddBeltRail(unit, new BGUnitRail(unit));
+                            editContext.AddBeltRail(unit, new BGUnitRail(unit) {IsClosed = false});
                         ImGui.SameLine();
                         if (ImGui.Button("Remove Belt"))
                         {
