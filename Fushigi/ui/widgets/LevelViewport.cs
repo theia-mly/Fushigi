@@ -66,6 +66,8 @@ namespace Fushigi.ui.widgets
     internal class LevelViewport(CourseArea area, GL gl, CourseAreaScene areaScene)
     {
         public static object?[] CopiedObjects = [];
+        public static Vector3 CopiedMedianPosition;
+        public static Vector2 CopiedMedianScreenPosition;
 
         public void PreventFurtherRendering() => mIsNoMoreRendering = true;
         private bool mIsNoMoreRendering = false;
@@ -114,6 +116,8 @@ namespace Fushigi.ui.widgets
         Vector2? mMultiSelectCurrentPos;
         bool mMultiSelecting = false;
         bool mMultiSelectEnded = true;
+
+        Vector3? selectedMedianStartPos;
 
         public static uint GridColor = 0x77_FF_FF_FF;
         public static float GridLineThickness = 1.5f;
@@ -722,9 +726,19 @@ namespace Fushigi.ui.widgets
                 ImGui.IsWindowHovered() &&
                 ImGui.IsKeyPressed(ImGuiKey.C) && modifiers == KeyboardModifier.CtrlCmd)
             {
+                CopiedMedianPosition = Vector3.Zero;
+                foreach (CourseActor actor in selectedActors)
+                {
+                    CopiedMedianPosition += actor.mStartingTrans;
+                }
+                CopiedMedianPosition /= selectedActors.Length;
+                CopiedMedianScreenPosition = WorldToScreen(CopiedMedianPosition);
+
                 CopiedObjects = new CourseActor[selectedActors.Length];
                 for (int i = 0; i < CopiedObjects.Length; i++)
+                {
                     CopiedObjects[i] = selectedActors[i].Clone(mArea);
+                }
             }
             bool ctrlOrCtrlShift = (modifiers == KeyboardModifier.CtrlCmd || modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift));
             bool ctrlAndShift = modifiers == (KeyboardModifier.CtrlCmd | KeyboardModifier.Shift);
@@ -759,46 +773,63 @@ namespace Fushigi.ui.widgets
             mEditContext.Select(newActor);
         }
 
-        private async Task DoPaste(bool freshCopy)
+        private void DoPaste(bool freshCopy)
         {
             if (CopiedObjects.Length == 0) return;
 
-            Vector3? _pos;
+            //Vector3? _pos;
             KeyboardModifier modifier;
             if (CopiedObjects is not CourseActor[] actors) return;
+            // string msg;
+            // if (actors.Length == 1)
+            //     msg = $"Placing actor {actors[0].mPackName}";
+            // else
+            //     msg = $"Placing {actors.Length} actors";
+            // msg += " -- Hold SHIFT to place multiple";
 
-            string msg;
-            if (actors.Length == 1)
-                msg = $"Placing actor {actors[0].mPackName}";
-            else
-                msg = $"Placing {actors.Length} actors";
-            msg += " -- Hold SHIFT to place multiple";
-
-            (_pos, modifier) = await PickPosition(msg, actors[0].mLayer);
-            if (_pos == null) return;
-
-            foreach (var actor in actors)
+            // (_pos, modifier) = await PickPosition(msg, actors[0].mLayer);
+            // if (_pos == null) return;
+            var relativePos = ScreenToWorld(CopiedMedianScreenPosition);
+            if (!ImGui.GetIO().KeyShift
+            && (relativePos.X < Camera.Target.X-Camera.Distance
+            || relativePos.X > Camera.Target.X+Camera.Distance
+            || relativePos.Y < Camera.Target.Y-Camera.Distance/Camera.AspectRatio
+            || relativePos.Y > Camera.Target.Y+Camera.Distance/Camera.AspectRatio))
             {
-                Vector3 pos = _pos.Value;
-                pos = new Vector3((float)Math.Round(pos.X, 0), (float)Math.Round(pos.Y, 0), actor.mTranslation.Z);
-
+                relativePos.X = Camera.Target.X;
+                relativePos.Y = Camera.Target.Y;
+            }
+            for (var i = 0; i < actors.Length; i++)
+            {
+                var actor = actors[i];
                 CourseActor newActor;
                 if (freshCopy)
                     newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
                 else
                     newActor = actor.Clone(mArea);
 
-                newActor.mTranslation = pos;
+                if (ImGui.GetIO().KeyShift)
+                {
+                    newActor.mTranslation = actor.mTranslation;
+                    Camera.Target = relativePos;
+                }
+                else
+                {
+                    newActor.mTranslation = relativePos + (actor.mTranslation-CopiedMedianPosition);
+                    newActor.mTranslation.Z = actor.mTranslation.Z;
+                    var n = 0;
+                    do
+                    {
+                        n++;
+                    } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{n}"));
+                    newActor.mName = $"{actor.mPackName}"+(n == 0 ? "":n);
+                }
 
                 mEditContext.AddActor(newActor);
             }
 
             mEditContext.Select(actors);
 
-            if (modifier == KeyboardModifier.Shift)
-            {
-                DoPaste(freshCopy);
-            }
         }
 
         void InteractionWithFocus(KeyboardModifier modifiers)
@@ -901,22 +932,33 @@ namespace Fushigi.ui.widgets
                 }
                 if (!mMultiSelecting && mEditContext.IsAnySelected<CourseActor>())
                 {
+                    Vector3 selectedMedianStartPos = Vector3.Zero;
                     foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
                     {
-                        Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
-                        posVec -= ScreenToWorld(ImGui.GetIO().MouseClickedPos[0]) - actor.mStartingTrans;
+                        selectedMedianStartPos += actor.mStartingTrans;
+                    }
+                    selectedMedianStartPos /= mEditContext.GetSelectedObjects<CourseActor>().Count();
 
+                    Vector3 selectedMedianPos = selectedMedianStartPos;
+
+                    Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
+                    posVec -= ScreenToWorld(ImGui.GetIO().MouseClickedPos[0]) - selectedMedianStartPos;
+
+                    foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
+                    {
                         if (ImGui.GetIO().KeyShift)
                         {
-                            actor.mTranslation = posVec;
+                            selectedMedianPos = posVec;
                         }
                         else
                         {
-                            posVec.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
-                            posVec.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
-                            posVec.Z = actor.mTranslation.Z;
-                            actor.mTranslation = posVec;
+                            selectedMedianPos.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
+                            selectedMedianPos.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                            selectedMedianPos.X += selectedMedianStartPos.X - MathF.Round(selectedMedianStartPos.X * 2, MidpointRounding.AwayFromZero) / 2;
+                            selectedMedianPos.Y += selectedMedianStartPos.Y - MathF.Round(selectedMedianStartPos.Y * 2, MidpointRounding.AwayFromZero) / 2;
                         }
+                        actor.mTranslation.X = selectedMedianPos.X + (actor.mStartingTrans.X - selectedMedianStartPos.X);
+                        actor.mTranslation.Y = selectedMedianPos.Y + (actor.mStartingTrans.Y - selectedMedianStartPos.Y);
                     }
                 }
                 if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? rail))

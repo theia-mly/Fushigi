@@ -580,6 +580,7 @@ namespace Fushigi.ui.widgets
 
         private string? mSelectedActor;
         private string? mSelectedLayer;
+        private bool placingActors;
         private string mAddActorSearchQuery = "";
         private string mAddLayerSearchQuery = "";
 
@@ -714,6 +715,9 @@ namespace Fushigi.ui.widgets
             var area = selectedArea;
             var ctx = areaScenes[selectedArea].EditContext;
 
+            if (placingActors) return;
+
+            placingActors = true;
             Vector3? pos;
             KeyboardModifier modifier;
             do
@@ -738,11 +742,10 @@ namespace Fushigi.ui.widgets
                 actor.mName = $"{actor.mPackName}{i}";
 
                 ctx.AddActor(actor);
-
-                mSelectedActor = null;
-                mSelectedLayer = null;
-
             } while ((modifier & KeyboardModifier.Shift) > 0);
+            placingActors = false;
+            mSelectedActor = null;
+            mSelectedLayer = null;
         }
 
         private async Task AddSelectedLayer()
