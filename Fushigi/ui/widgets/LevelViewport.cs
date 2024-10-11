@@ -954,8 +954,11 @@ namespace Fushigi.ui.widgets
                         {
                             selectedMedianPos.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
                             selectedMedianPos.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
-                            selectedMedianPos.X += selectedMedianStartPos.X - MathF.Round(selectedMedianStartPos.X * 2, MidpointRounding.AwayFromZero) / 2;
-                            selectedMedianPos.Y += selectedMedianStartPos.Y - MathF.Round(selectedMedianStartPos.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                            if (!ImGui.GetIO().KeyAlt)
+                            {
+                                selectedMedianPos.X += selectedMedianStartPos.X - MathF.Round(selectedMedianStartPos.X * 2, MidpointRounding.AwayFromZero) / 2;
+                                selectedMedianPos.Y += selectedMedianStartPos.Y - MathF.Round(selectedMedianStartPos.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                            }
                         }
                         actor.mTranslation.X = selectedMedianPos.X + (actor.mStartingTrans.X - selectedMedianStartPos.X);
                         actor.mTranslation.Y = selectedMedianPos.Y + (actor.mStartingTrans.Y - selectedMedianStartPos.Y);
