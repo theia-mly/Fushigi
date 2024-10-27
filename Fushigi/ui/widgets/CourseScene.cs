@@ -502,7 +502,7 @@ namespace Fushigi.ui.widgets
         
         public void Save()
         {
-            string[] sizeTables = Directory.GetFiles(Path.Combine(RomFS.GetRoot(), "System", "Resource"));
+            string[] sizeTables = Directory.GetFiles("System", "Resource");
             foreach (string path in sizeTables)
             {
                 RSTB resource_table = new RSTB();
