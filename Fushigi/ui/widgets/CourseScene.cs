@@ -502,37 +502,38 @@ namespace Fushigi.ui.widgets
         
         public void Save()
         {
-            RSTB resource_table = new RSTB();
-            resource_table.Load();
-
-            List<string> pathsToWriteTo = course.GetAreas().Select(
-                a=> Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
-                ).ToList();
-
-            //Added Game Update Compatibility
-            foreach (string path in resource_table.sizeTables)
+            string[] sizeTables = Directory.GetFiles(Path.Combine(RomFS.GetRoot(), "System", "Resource"));
+            foreach (string path in sizeTables)
             {
+                RSTB resource_table = new RSTB();
+                resource_table.Load(Path.GetFileName(path));
+
+                List<string> pathsToWriteTo = course.GetAreas().Select(
+                    a=> Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
+                    ).ToList();
+
+                //Added Game Update Compatibility
                 pathsToWriteTo.Add(
-                    Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", Path.GetFileName(path))
+                    Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", resource_table.sizeTableFileName)
                     );
+
+                if (!pathsToWriteTo.All(EnsureFileIsWritable))
+                {
+                    //one or more of the files are locked, due to being open externally. abandon save and show popup informing user
+                    _ = SaveFailureAlert.ShowDialog(mPopupModalHost);
+                    return;
+                }
+
+                //Save each course area to current romfs folder
+                foreach (var area in this.course.GetAreas())
+                {
+                    Console.WriteLine($"Saving area {area.GetName()}...");
+
+                    area.Save(resource_table);
+                }
+
+                resource_table.Save();
             }
-
-            if (!pathsToWriteTo.All(EnsureFileIsWritable))
-            {
-                //one or more of the files are locked, due to being open externally. abandon save and show popup informing user
-                _ = SaveFailureAlert.ShowDialog(mPopupModalHost);
-                return;
-            }
-
-            //Save each course area to current romfs folder
-            foreach (var area in this.course.GetAreas())
-            {
-                Console.WriteLine($"Saving area {area.GetName()}...");
-
-                area.Save(resource_table);
-            }
-
-            resource_table.Save();
         }
 
         bool EnsureFileIsWritable(string path)

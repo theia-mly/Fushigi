@@ -36,9 +36,9 @@ namespace Fushigi.rstb
         private Header FileHeader;
 
         /// <summary>
-        /// The file names for the RSTB size tables.
+        /// The file name for the RSTB size table.
         /// </summary>
-        public string[] sizeTables;
+        public string sizeTableFileName;
 
         /// <summary>
         /// Sets a resource given a file path and decompressed size.
@@ -64,14 +64,15 @@ namespace Fushigi.rstb
         /// <summary>
         /// Loads the resource table from the romfs or saved content path configured in the tool settings.
         /// </summary>
-        public void Load()
+        public void Load(string file)
         {
-            sizeTables = Directory.GetFiles(Path.Combine("System", "Resource"));
-
-            foreach (string path in sizeTables)
+            sizeTableFileName = file;
+            var path = Path.Combine("System", "Resource", file);
+            if (!File.Exists(path))
             {
-                Read(new MemoryStream(FileUtil.DecompressFile(path)));
+                return;
             }
+            Read(new MemoryStream(FileUtil.DecompressFile(path)));
         }
 
         /// <summary>
@@ -87,22 +88,18 @@ namespace Fushigi.rstb
 
             var mem = new MemoryStream();
             Write(mem);
-
-            foreach (string path in sizeTables)
+            try
             {
-                try
-                {
-                    File.WriteAllBytes(
-                    Path.Combine(dir, Path.GetFileName(path)), 
-                    FileUtil.CompressData(mem.ToArray())
-                    );
-                }
-                catch (IOException e)
-                {
-                    Logger.Logger.LogError(e);
-                    //Likely due to the course being open in the game, caught to prevent crash
-                    //TODO: notify the user
-                }
+                File.WriteAllBytes(
+                Path.Combine(dir, sizeTableFileName), 
+                FileUtil.CompressData(mem.ToArray())
+                );
+            }
+            catch (IOException e)
+            {
+                Logger.Logger.LogError(e);
+                //Likely due to the course being open in the game, caught to prevent crash
+                //TODO: notify the user
             }
         }
 

@@ -106,35 +106,39 @@ namespace Fushigi.course
 
         public void Save()
         {
-            RSTB resource_table = new RSTB();
-            resource_table.Load();
+            string[] sizeTables = Directory.GetFiles(Path.Combine(RomFS.GetRoot(), "System", "Resource"));
+            foreach (string path in sizeTables)
+            {
+                RSTB resource_table = new RSTB();
+                resource_table.Load(Path.GetFileName(path));
 
-            BymlHashTable stageParamRoot = new();
-            stageParamRoot.AddNode(BymlNodeId.Array, new BymlArrayNode(), "Actors");
-            stageParamRoot.AddNode(BymlNodeId.Array, mGlobalLinks.SerializeToArray(), "Links");
+                BymlHashTable stageParamRoot = new();
+                stageParamRoot.AddNode(BymlNodeId.Array, new BymlArrayNode(), "Actors");
+                stageParamRoot.AddNode(BymlNodeId.Array, mGlobalLinks.SerializeToArray(), "Links");
 
-            BymlArrayNode refArr = new();
+                BymlArrayNode refArr = new();
 
-            foreach (CourseArea area in mAreas)
-                refArr.AddNodeToArray(BymlUtil.CreateNode($"Work/Stage/StageParam/{area.GetName()}.game__stage__StageParam.gyml"));
+                foreach (CourseArea area in mAreas)
+                    refArr.AddNodeToArray(BymlUtil.CreateNode($"Work/Stage/StageParam/{area.GetName()}.game__stage__StageParam.gyml"));
 
-            stageParamRoot.AddNode(BymlNodeId.Array, refArr, "RefStages");
+                stageParamRoot.AddNode(BymlNodeId.Array, refArr, "RefStages");
 
-            var byml = new Byml.Byml(stageParamRoot);
-            var mem = new MemoryStream();
-            byml.Save(mem);
-            resource_table.SetResource($"BancMapUnit/{mCourseName}.bcett.byml", (uint)mem.Length);
-            string folder = Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit");
+                var byml = new Byml.Byml(stageParamRoot);
+                var mem = new MemoryStream();
+                byml.Save(mem);
+                resource_table.SetResource($"BancMapUnit/{mCourseName}.bcett.byml", (uint)mem.Length);
+                string folder = Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit");
 
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
 
-            string levelPath = Path.Combine(folder, $"{mCourseName}.bcett.byml.zs");
-            File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
+                string levelPath = Path.Combine(folder, $"{mCourseName}.bcett.byml.zs");
+                File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
 
-            SaveAreas(resource_table);
+                SaveAreas(resource_table);
 
-            resource_table.Save();
+                resource_table.Save();
+            }
         }
 
         public void SaveAreas(RSTB resTable)
