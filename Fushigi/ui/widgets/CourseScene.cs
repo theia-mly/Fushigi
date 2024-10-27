@@ -502,7 +502,10 @@ namespace Fushigi.ui.widgets
         
         public void Save()
         {
-            string[] sizeTables = Directory.GetFiles(Path.Combine("System", "Resource"));
+            var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
+            if (!Directory.Exists(rstbPath))
+                    Directory.CreateDirectory(rstbPath);
+            string[] sizeTables = Directory.GetFiles(rstbPath);
             foreach (string path in sizeTables)
             {
                 RSTB resource_table = new RSTB();
@@ -514,7 +517,7 @@ namespace Fushigi.ui.widgets
 
                 //Added Game Update Compatibility
                 pathsToWriteTo.Add(
-                    Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", resource_table.sizeTableFileName)
+                    Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", Path.GetFileName(path))
                     );
 
                 if (!pathsToWriteTo.All(EnsureFileIsWritable))

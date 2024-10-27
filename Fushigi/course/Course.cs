@@ -106,7 +106,10 @@ namespace Fushigi.course
 
         public void Save()
         {
-            string[] sizeTables = Directory.GetFiles(Path.Combine(RomFS.GetRoot(), "System", "Resource"));
+            var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
+            if (!Directory.Exists(rstbPath))
+                    Directory.CreateDirectory(rstbPath);
+            string[] sizeTables = Directory.GetFiles(rstbPath);
             foreach (string path in sizeTables)
             {
                 RSTB resource_table = new RSTB();

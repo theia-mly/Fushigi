@@ -67,7 +67,7 @@ namespace Fushigi.rstb
         public void Load(string file)
         {
             sizeTableFileName = file;
-            var path = Path.Combine("System", "Resource", file);
+            var path =  FileUtil.FindContentPath(Path.Combine("System", "Resource", file));
             if (!File.Exists(path))
             {
                 return;
