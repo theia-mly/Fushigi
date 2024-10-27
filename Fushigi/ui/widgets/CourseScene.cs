@@ -509,10 +509,13 @@ namespace Fushigi.ui.widgets
                 a=> Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
                 ).ToList();
 
-            //Added 1.0.1 Compatibility (Maybe)
-            pathsToWriteTo.Add(
-                Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", resource_table.sizeTableVersion)
-                );
+            //Added Game Update Compatibility
+            foreach (string path in resource_table.sizeTables)
+            {
+                pathsToWriteTo.Add(
+                    Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", Path.GetFileName(path))
+                    );
+            }
 
             if (!pathsToWriteTo.All(EnsureFileIsWritable))
             {

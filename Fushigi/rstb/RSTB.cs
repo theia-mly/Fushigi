@@ -36,9 +36,9 @@ namespace Fushigi.rstb
         private Header FileHeader;
 
         /// <summary>
-        /// The file name for the active RSTB size table version.
+        /// The file names for the RSTB size tables.
         /// </summary>
-        public string sizeTableVersion;
+        public string[] sizeTables;
 
         /// <summary>
         /// Sets a resource given a file path and decompressed size.
@@ -66,25 +66,12 @@ namespace Fushigi.rstb
         /// </summary>
         public void Load()
         {
-            sizeTableVersion = "ResourceSizeTable.Product.101.rsizetable.zs";
+            sizeTables = Directory.GetFiles(Path.Combine("System", "Resource"));
 
-            string path = FileUtil.FindContentPath(
-                Path.Combine("System", "Resource", sizeTableVersion)
-                );
-            //Failed to find file, try the launch version
-            if (!File.Exists(path))
+            foreach (string path in sizeTables)
             {
-                sizeTableVersion = "ResourceSizeTable.Product.100.rsizetable.zs";
-
-                path = FileUtil.FindContentPath(
-                Path.Combine("System", "Resource", sizeTableVersion)
-                );
+                Read(new MemoryStream(FileUtil.DecompressFile(path)));
             }
-            else if (!File.Exists(path))
-                return; //Failed to find file, skip
-
-
-            Read(new MemoryStream(FileUtil.DecompressFile(path)));
         }
 
         /// <summary>
@@ -101,18 +88,21 @@ namespace Fushigi.rstb
             var mem = new MemoryStream();
             Write(mem);
 
-            try
+            foreach (string path in sizeTables)
             {
-                File.WriteAllBytes(
-                Path.Combine(dir, sizeTableVersion), 
-                FileUtil.CompressData(mem.ToArray())
-                );
-            }
-            catch (IOException e)
-            {
-                Logger.Logger.LogError(e);
-                //Likely due to the course being open in the game, caught to prevent crash
-                //TODO: notify the user
+                try
+                {
+                    File.WriteAllBytes(
+                    Path.Combine(dir, Path.GetFileName(path)), 
+                    FileUtil.CompressData(mem.ToArray())
+                    );
+                }
+                catch (IOException e)
+                {
+                    Logger.Logger.LogError(e);
+                    //Likely due to the course being open in the game, caught to prevent crash
+                    //TODO: notify the user
+                }
             }
         }
 
