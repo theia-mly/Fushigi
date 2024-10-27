@@ -508,8 +508,10 @@ namespace Fushigi.ui.widgets
             List<string> pathsToWriteTo = course.GetAreas().Select(
                 a=> Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
                 ).ToList();
+
+            //Added 1.0.1 Compatibility (Maybe)
             pathsToWriteTo.Add(
-                Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", "ResourceSizeTable.Product.100.rsizetable.zs")
+                Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", resource_table.sizeTableVersion)
                 );
 
             if (!pathsToWriteTo.All(EnsureFileIsWritable))

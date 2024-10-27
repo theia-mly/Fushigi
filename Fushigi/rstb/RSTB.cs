@@ -36,6 +36,11 @@ namespace Fushigi.rstb
         private Header FileHeader;
 
         /// <summary>
+        /// The file name for the active RSTB size table version.
+        /// </summary>
+        public string sizeTableVersion;
+
+        /// <summary>
         /// Sets a resource given a file path and decompressed size.
         /// </summary>
         /// <param name="filePath"></param>
@@ -60,13 +65,24 @@ namespace Fushigi.rstb
         /// Loads the resource table from the romfs or saved content path configured in the tool settings.
         /// </summary>
         public void Load()
-        {            
+        {
+            sizeTableVersion = "ResourceSizeTable.Product.101.rsizetable.zs";
+
             string path = FileUtil.FindContentPath(
-                Path.Combine("System", "Resource", "ResourceSizeTable.Product.100.rsizetable.zs")
+                Path.Combine("System", "Resource", sizeTableVersion)
                 );
-            //Failed to find file, skip
+            //Failed to find file, try the launch version
             if (!File.Exists(path))
-                return;
+            {
+                sizeTableVersion = "ResourceSizeTable.Product.100.rsizetable.zs";
+
+                path = FileUtil.FindContentPath(
+                Path.Combine("System", "Resource", sizeTableVersion)
+                );
+            }
+            else if (!File.Exists(path))
+                return; //Failed to find file, skip
+
 
             Read(new MemoryStream(FileUtil.DecompressFile(path)));
         }
@@ -88,7 +104,7 @@ namespace Fushigi.rstb
             try
             {
                 File.WriteAllBytes(
-                Path.Combine(dir, "ResourceSizeTable.Product.100.rsizetable.zs"), 
+                Path.Combine(dir, sizeTableVersion), 
                 FileUtil.CompressData(mem.ToArray())
                 );
             }
