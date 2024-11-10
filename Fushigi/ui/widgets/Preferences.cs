@@ -25,6 +25,7 @@ namespace Fushigi.ui.widgets
                 var useAstcTextureCache = UserSettings.UseAstcTextureCache();
                 var hideDeletingLinkedActorsPopup = UserSettings.HideDeletingLinkedActorsPopup();
                 var useNewCamera = UserSettings.GetUseNewCamera();
+                var backupFreqMinutes = UserSettings.GetBackupFreqMinutes();
 
                 ImGui.Indent();
 
@@ -112,6 +113,11 @@ namespace Fushigi.ui.widgets
                     UserSettings.SetUseNewCamera(useNewCamera);
 
                 Tooltip.Show("Uses a new camera system that aims to be more accurate.\nWARNING: in beta and might cause some issues");
+
+                if (ImGui.InputFloat("Backup Frequency (in minutes)", ref backupFreqMinutes))
+                    UserSettings.SetBackupFreqMinutes(backupFreqMinutes);
+
+                Tooltip.Show("How long between each backup, in minutes.\nBackups are stored wherever Fushigi is installed to.");
 
                 ImGui.Unindent();
 

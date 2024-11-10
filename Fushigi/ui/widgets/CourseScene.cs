@@ -17,6 +17,7 @@ using Fushigi.ui.helpers;
 using Fasterflect;
 using System.Text.RegularExpressions;
 using System.Collections;
+using Fushigi.Logger;
 
 namespace Fushigi.ui.widgets
 {
@@ -208,7 +209,7 @@ namespace Fushigi.ui.widgets
             resourceFiles = resourceFiles.Distinct().Where(x => !string.IsNullOrEmpty(x)).ToList();
             //Unload any unused resources in the cache
 
-            List<string> removed = new List<string>();
+            List<string> removed = [];
             foreach (var bfres in BfresCache.Cache)
             {
                 //Not currently used by area, dispose
@@ -217,7 +218,7 @@ namespace Fushigi.ui.widgets
                     bfres.Value.Dispose();
                     removed.Add(bfres.Key);
 
-                    Console.WriteLine($"Disposing resource {bfres.Key}");
+                    Logger.Logger.LogMessage("CourseScene", $"Disposing resource {bfres.Key}");
                 }
             }
 
@@ -229,8 +230,11 @@ namespace Fushigi.ui.widgets
             {
                 string? file = resourceFiles[i];
                 progress.Report(($"Loading models", i/(float)resourceFiles.Count));
+                Logger.Logger.LogMessage("CourseScene", $"Loading {file}");
                 await BfresCache.LoadAsync(glScheduler, file);
+                Logger.Logger.LogMessage("CourseScene", $"Loaded {file}");
             }
+            Logger.Logger.LogMessage("CourseScene", $"Finished loading models");
         }
 
         public void PreventFurtherRendering()
@@ -251,6 +255,8 @@ namespace Fushigi.ui.widgets
 
             return false;
         }
+
+        double backupTime = 0;
 
         public void DrawUI(GL gl, double deltaSeconds)
         {
@@ -273,6 +279,13 @@ namespace Fushigi.ui.widgets
             CourseMiniView();
 
             SelectActorAndLayerPanel();
+
+            backupTime += deltaSeconds;
+            if (backupTime >= UserSettings.GetBackupFreqMinutes() * 60)
+            {
+                Save(backup: true);
+                backupTime = 0;
+            }
 
             for (int i = 0; i < mOpenToolWindows.Count; i++)
             {
@@ -488,17 +501,33 @@ namespace Fushigi.ui.widgets
           undoWindow.Render(areaScenes[selectedArea].EditContext);
         }
         
-        public void Save()
+        public void Save(bool backup = false, string backupFolder = "")
         {
             RSTB resource_table = new RSTB();
             resource_table.Load();
 
-            List<string> pathsToWriteTo = course.GetAreas().Select(
-                a=> Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
-                ).ToList();
-            pathsToWriteTo.Add(
-                Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", "ResourceSizeTable.Product.100.rsizetable.zs")
-                );
+            List<string> pathsToWriteTo;
+            DateTime now = DateTime.Now;
+            if (backupFolder == "")
+                backupFolder = Directory.GetCurrentDirectory() + $"/backups/{now.Year}-{now.Month}-{now.Day}_{now.Hour}-{now.Minute}-{now.Second}/";
+            if (backup)
+            {
+                Directory.CreateDirectory(backupFolder);
+                pathsToWriteTo = course.GetAreas().Select(
+                    a=> Path.Combine(backupFolder, "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
+                    ).ToList();
+                pathsToWriteTo.Add(
+                    Path.Combine(backupFolder, "System", "Resource", "ResourceSizeTable.Product.100.rsizetable.zs")
+                    );
+            } else
+            {
+                pathsToWriteTo = course.GetAreas().Select(
+                    a => Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
+                    ).ToList();
+                pathsToWriteTo.Add(
+                    Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", "ResourceSizeTable.Product.100.rsizetable.zs")
+                    );
+            }
 
             if (!pathsToWriteTo.All(EnsureFileIsWritable))
             {
@@ -508,14 +537,23 @@ namespace Fushigi.ui.widgets
             }
 
             //Save each course area to current romfs folder
-            foreach (var area in this.course.GetAreas())
+            foreach (var area in course.GetAreas())
             {
-                Console.WriteLine($"Saving area {area.GetName()}...");
+                Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area {area.GetName()}...");
 
-                area.Save(resource_table);
+                if (backup)
+                    area.Save(resource_table, Path.Combine(backupFolder, "BancMapUnit"));
+                else
+                    area.Save(resource_table);
             }
 
-            resource_table.Save();
+            if (backup)
+                resource_table.Save();
+            else
+                resource_table.Save(Path.Combine(backupFolder, "System", "Resource"));
+
+            if (backup == false)
+                Save(backup: true, backupFolder);
         }
 
         bool EnsureFileIsWritable(string path)
@@ -943,6 +981,14 @@ namespace Fushigi.ui.widgets
                         ImGui.PushItemWidth(ImGui.GetColumnWidth() - ImGui.GetStyle().ScrollbarSize);
                         ImGui.InputText("##Actor Hash", ref hash, 256, ImGuiInputTextFlags.ReadOnly);
                         ImGui.PopItemWidth();
+    
+                    ImGui.TableNextColumn();
+                    ImGui.Text("Area Hash");
+                    ImGui.TableNextColumn();
+                    string areaHash = mSelectedActor.mAreaHash.ToString();
+                    ImGui.PushItemWidth(ImGui.GetColumnWidth() - ImGui.GetStyle().ScrollbarSize);
+                    ImGui.InputText("##Area Hash", ref areaHash, 256, ImGuiInputTextFlags.ReadOnly);
+                    ImGui.PopItemWidth();
 
                     ImGui.TableNextColumn();
                         ImGui.Separator();

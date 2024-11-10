@@ -47,7 +47,7 @@ namespace Fushigi
                 Assets = new Assets()
                 {
                     LargeImageKey = imageKey,
-                    LargeImageText = "Fushigi"
+                    LargeImageText = $"Fushigi {Program.Version}"
                 },
                 Timestamps = new Timestamps()
                 {

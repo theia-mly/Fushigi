@@ -1,11 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fushigi.util
 {
@@ -23,6 +16,7 @@ namespace Fushigi.util
         {
             public string RomFSPath;
             public string RomFSModPath;
+            public float BackupFreqMinutes = 10;
             public Dictionary<string, string> ModPaths;
             public List<string> RecentCourses;
             public bool UseGameShaders;
@@ -32,8 +26,9 @@ namespace Fushigi.util
 
             public Settings()
             {
+                BackupFreqMinutes = 10;
                 RomFSPath = "";
-                ModPaths = new();
+                ModPaths = [];
                 RomFSModPath = "";
                 RecentCourses = new List<string>(MaxRecents);
                 UseGameShaders = false;
@@ -98,6 +93,19 @@ namespace Fushigi.util
         {
             AppSettings.UseNewCamera = newCamera;
             Save();
+        }
+
+        public static void SetBackupFreqMinutes(float minutes)
+        {
+            AppSettings.BackupFreqMinutes = minutes;
+            Save();
+        }
+
+        public static float GetBackupFreqMinutes()
+        {
+            if (AppSettings.BackupFreqMinutes == 0)
+                SetBackupFreqMinutes(10);
+            return AppSettings.BackupFreqMinutes;
         }
 
         public static string GetRomFSPath()

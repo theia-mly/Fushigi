@@ -74,12 +74,13 @@ namespace Fushigi.rstb
         /// <summary>
         /// Save the resource table to the saved romfs path configured in the tool settings.
         /// </summary>
-        public void Save()
+        public void Save(string dir = "")
         {
             if (HashToResourceSize.Count == 0) //File not loaded, return
                 return;
            
-            string dir = Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource");
+            if (dir == "")
+                dir = Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource");
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             var mem = new MemoryStream();

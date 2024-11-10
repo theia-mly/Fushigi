@@ -1,0 +1,36 @@
+mar
+- a way to backup levels if they don’t save, so maybe an auto save feature or a separate folder that backs up the current level just in case something crashes
+- a way to edit the lighting in the game
+- a way for multiple levels to be open
+
+verbs
+- little descriptions on what some things do, such as tags or area actors 
+- a way to favorite actors and have them saved in a section or a section that has the most important actors
+- clean up ui
+
+seeds
+- the last link you use should be displayed as the first one to use when opening the “add link” button
+- multiselect terrain points
+
+rimea
+- even though most of the game's terrain has a z value of 0, fushigi seems to render tiles at a z of 2 no matter what you actually set its z value to, meaning decorations that should go in front of the ground are usually getting rendered behind it
+- every bg unit type other than bridges should probably be closed by default, in fact I don't think there's any reason to not have these closed at all times
+- global link editing is broken and doing so through the selection parameters tab is strange to begin with
+- actor to rail links always use the 'reference' link type even though the on/off tracks make use of the 'basicsignal' link type
+- editing a newly placed rail's dynamic properties isn't possible until the level has been re-opened
+- enabling curve control always places the curve point at x0 y0 which is extremely annoying in most cases, I suppose placing it at the exact coordinates of the railpoint itself would also be a bit finnicky, but maybe it could be placed at a close offset by default
+- there is more than one rail type, for example the on/off rails that appear in the world 6 airship, or the guide tracks that appear in some badge challenges, use a different Gyaml than the default rail, which fushigi can't place
+- although some "area" type actors have the correct vertical offset when visualised in fushigi now, other area actors don't, like the "AdditionalCullingAabbArea" object
+- certain actors are impossible to select by simply clicking on them, most notable the "AirWallRight" actor which is used for every goal pole
+- dragging multiple actors around at the same time causes any actors that aren't aligned to the grid to snap back to it
+- "BlockRengaItem" doesn't have a drop-down menu of items to select the way "BlockHatena" does
+- there should be an option for disabling the green actor boxes for only the DV actors, kind of like your screenshot mode, since those make most levels look like much more of a mess than they really are
+- "ItemWonderHole" should have "ChildParameters" set to "Default" by... default
+- having toggles for different actor categories could be very useful
+- if I even understand what wonderview is supposed to do it's a cool idea but it doesn't work
+- the default grid is a bit rough on the eyes, an optional checkboard grid without outlines would be my preference
+- I don't think the editor's rendering of the parallax of actors on the DV layers is entirely accurate, or at least it's not intuitive
+- there's no way of editing simultaneousgroups, it's basically the only major thing that's completely missing from fushigi I believe
+- I know where to look to find what each "TLXXX" of the talking flowers corresponds to, integrating this into fushigi itself so selecting talking flower dialogue is no longer such a tedious process could be quite cool I think
+- internal rails are impossible to add
+- some kind of "reverse railpoints" option for terrain units could be really useful to fix terrain that's been placed the wrong way around
