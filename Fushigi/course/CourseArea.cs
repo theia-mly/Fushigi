@@ -161,7 +161,7 @@ namespace Fushigi.course
 
         public IReadOnlyList<CourseActor> GetSortedActors()
         {
-            if (!mActorHolder.mActors.TrueForAll(mActorHolder.mSortedActors.Contains))
+            if (!mActorHolder.mActors.TrueForAll(mActorHolder.mSortedActors.Contains) || !mActorHolder.mSortedActors.TrueForAll(mActorHolder.mActors.Contains))
             {
                 mActorHolder.mSortedActors = new List<CourseActor>(mActorHolder.mActors);
                 mActorHolder.mSortedActors.Sort((x, y) => x.mTranslation.Z.CompareTo(y.mTranslation.Z));

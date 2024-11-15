@@ -156,11 +156,23 @@ namespace Fushigi.course
 
         public class CourseRailPoint
         {
-            public CourseRailPoint()
+            public CourseRailPoint(string type)
             {
                 this.mHash = RandomUtil.GetRandom();
                 this.mTranslate = new System.Numerics.Vector3();
                 this.mControl = new(this, mTranslate);
+                IDictionary<string, ParamDB.ComponentParam> comp;
+
+                if (ParamDB.TryGetRailPointComponent(type, out var componentName))
+                    comp = ParamDB.GetRailComponentParams(componentName);
+                else
+                    comp = ImmutableDictionary.Create<string, ParamDB.ComponentParam>();
+
+                foreach (string component in comp.Keys)
+                {
+                    var c = comp[component];
+                    mParameters.Add(component, c.InitValue);
+                }
             }
 
 

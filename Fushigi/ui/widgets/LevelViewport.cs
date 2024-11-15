@@ -425,7 +425,7 @@ namespace Fushigi.ui.widgets
 
             var render = BfresCache.Load(gl, resourceName);
 
-            if (render == null || !render.Models.ContainsKey(modelName))
+            if (render == null || !render.Models.TryGetValue(modelName, out BfresRender.BfresModel? value))
                 return;
 
             var transMat = Matrix4x4.CreateTranslation(actor.mTranslation);
@@ -1260,6 +1260,8 @@ namespace Fushigi.ui.widgets
                             MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
                             selectedPoint.mTranslate.Z);
 
+                        newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
+
                         if (rail.mPoints.Count - 1 == index)
                             rail.mPoints.Add(newPoint);
                         else
@@ -1273,11 +1275,13 @@ namespace Fushigi.ui.widgets
                     {
                         Vector3 posVec = this.ScreenToWorld(ImGui.GetMousePos());
 
-                        var newPoint = new CourseRail.CourseRailPoint();
+                        var newPoint = new CourseRail.CourseRailPoint(rail.mType);
                         newPoint.mTranslate = new(
                             MathF.Round(posVec.X, MidpointRounding.AwayFromZero),
                             MathF.Round(posVec.Y, MidpointRounding.AwayFromZero),
                             0);
+
+                        newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
 
                         rail.mPoints.Add(newPoint);
 
