@@ -1234,7 +1234,7 @@ namespace Fushigi.ui.widgets
                     //Delete selected
                     if (selectedPoint != null && (ImGui.IsKeyPressed(ImGuiKey.Delete) || ImGui.IsKeyPressed(ImGuiKey.Backspace)))
                     {
-                        rail.mPoints.Remove(selectedPoint);
+                        mEditContext.DeleteRailPoint(rail, selectedPoint);
                     }
                     if (selectedPoint != null && ImGui.IsMouseReleased(0))
                     {
@@ -1263,9 +1263,9 @@ namespace Fushigi.ui.widgets
                         newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
 
                         if (rail.mPoints.Count - 1 == index)
-                            rail.mPoints.Add(newPoint);
+                            mEditContext.AddRailPoint(rail, newPoint);
                         else
-                            rail.mPoints.Insert(index, newPoint);
+                            mEditContext.InsertRailPoint(rail, newPoint, index);
 
                         this.mEditContext.DeselectAll();
                         this.mEditContext.Select(newPoint);
@@ -1283,7 +1283,7 @@ namespace Fushigi.ui.widgets
 
                         newPoint.mControl.mTranslate = newPoint.mTranslate + new Vector3(0, 1, 0);
 
-                        rail.mPoints.Add(newPoint);
+                        mEditContext.AddRailPoint(rail, newPoint);
 
                         this.mEditContext.DeselectAll();
                         this.mEditContext.Select(newPoint);

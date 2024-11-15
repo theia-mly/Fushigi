@@ -1738,6 +1738,7 @@ namespace Fushigi.ui.widgets
             ImGui.Text("Select a Wall");
             ImGui.Text("Alt + Left Click to add point");
             ImGui.Text("Delete to remove point");
+            ImGui.Text("Right Click to add Internal Rails");
 
             ImGui.Checkbox("Hide Walls", ref HideWalls);
 
@@ -1815,6 +1816,7 @@ namespace Fushigi.ui.widgets
                                 if (ImGui.IsItemHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
                                 {
                                     SelectRail();
+                                    ImGui.OpenPopup("WallMenu");
                                 }
 
                                 ImGui.SameLine();
@@ -1868,6 +1870,16 @@ namespace Fushigi.ui.widgets
                         for (int iWall = 0; iWall < unit.Walls.Count; iWall++)
                         {
                             Wall wall = unit.Walls[iWall];
+                            if (editContext.IsSelected(wall.ExternalRail))
+                            {
+                                if (ImGui.BeginPopupContextWindow("WallMenu", ImGuiPopupFlags.MouseButtonRight))
+                                {
+                                    if (ImGui.MenuItem("Add Internal Rail"))
+                                        editContext.AddInternalRail(wall, new BGUnitRail(unit){IsInternal = true});
+
+                                    ImGui.EndPopup();
+                                }
+                            }
                             if (wall.InternalRails.Count > 0)
                             {
                                 ImGui.Unindent();
@@ -1883,6 +1895,16 @@ namespace Fushigi.ui.widgets
                                     for (int iInternal = 0; iInternal < wall.InternalRails.Count; iInternal++)
                                     {
                                         BGUnitRail? rail = wall.InternalRails[iInternal];
+                                        if (editContext.IsSelected(rail))
+                                        {
+                                            if (ImGui.BeginPopupContextWindow("WallMenu", ImGuiPopupFlags.MouseButtonRight))
+                                            {
+                                                if (ImGui.MenuItem($"Remove Internal Rail {iInternal}"))
+                                                    editContext.DeleteInternalRail(wall, rail);
+
+                                                ImGui.EndPopup();
+                                            }
+                                        }
                                         RailListItem("Internal Rail", rail, iInternal);
                                     }
                                 }
@@ -1947,7 +1969,7 @@ namespace Fushigi.ui.widgets
                     ImGui.Selectable(type);
 
                     if (ImGui.IsItemHovered() && ImGui.IsMouseClicked(0))
-                        railHolder.mRails.Add(new CourseRail(this.selectedArea.mRootHash, type));
+                        editContext.AddRail(new CourseRail(this.selectedArea.mRootHash, type));
                 }
 
                 ImGui.EndCombo();
@@ -1958,7 +1980,7 @@ namespace Fushigi.ui.widgets
             {
                 var selected = editContext.GetSelectedObjects<CourseRail>();
                 foreach (var rail in selected)
-                    railHolder.mRails.Remove(rail);
+                    editContext.DeleteRail(rail);
             }
 
             foreach (CourseRail rail in railHolder.mRails)

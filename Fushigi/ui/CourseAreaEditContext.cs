@@ -135,7 +135,7 @@ namespace Fushigi.ui
         {
             LogAdding<CourseRail>(rail.mHash);
             CommitAction(area.mRailHolder.mRails.RevertableAdd(rail,
-                $"{IconUtil.ICON_PLUS_CIRCLE} Add Rail"));
+                $"{IconUtil.ICON_PLUS_CIRCLE} Add {rail.mType} Rail"));
         }
 
         public void DeleteRail(CourseRail rail)
@@ -146,7 +146,31 @@ namespace Fushigi.ui
             DeleteRailLinkWithDestRail(rail.mHash);
             CommitAction(area.mRailHolder.mRails.RevertableRemove(rail));
 
-            batchAction.Commit($"{IconUtil.ICON_TRASH} Delete Rail");
+            batchAction.Commit($"{IconUtil.ICON_TRASH} Delete {rail.mType} Rail");
+        }
+
+        public void AddRailPoint(CourseRail rail, CourseRail.CourseRailPoint point)
+        {
+            LogAdding<CourseRail.CourseRailPoint>(point.mHash);
+            CommitAction(rail.mPoints.RevertableAdd(point,
+                $"{IconUtil.ICON_PLUS_CIRCLE} Add Rail Point"));
+        }
+
+        public void InsertRailPoint(CourseRail rail, CourseRail.CourseRailPoint point, int index)
+        {
+            LogAdding<CourseRail.CourseRailPoint>(point.mHash);
+            CommitAction(rail.mPoints.RevertableInsert(point, index,
+                $"{IconUtil.ICON_PLUS_CIRCLE} Add Rail Point"));
+        }
+
+        public void DeleteRailPoint(CourseRail rail, CourseRail.CourseRailPoint point)
+        {
+            LogAdding<CourseRail.CourseRailPoint>(point.mHash);
+
+            var batchAction = BeginBatchAction();
+            CommitAction(rail.mPoints.RevertableRemove(point));
+
+            batchAction.Commit($"{IconUtil.ICON_TRASH} Delete Rail Point");
         }
 
         public void AddRailLink(CourseActorToRailLink link)
@@ -216,6 +240,20 @@ namespace Fushigi.ui
             LogDeleting<Wall>();
             CommitAction(unit.Walls.RevertableRemove(wall,
                     $"{IconUtil.ICON_TRASH} Delete Wall"));
+        }
+
+        public void AddInternalRail(Wall wall, BGUnitRail rail)
+        {
+            LogAdding<BGUnitRail>();
+            CommitAction(wall.InternalRails.RevertableAdd(rail,
+                    $"{IconUtil.ICON_PLUS_CIRCLE} Add Internal Rail"));
+        }
+
+        public void DeleteInternalRail(Wall wall, BGUnitRail rail)
+        {
+            LogDeleting<BGUnitRail>();
+            CommitAction(wall.InternalRails.RevertableRemove(rail,
+                    $"{IconUtil.ICON_TRASH} Delete Internal Rail"));
         }
 
         public void AddBeltRail(CourseUnit unit, BGUnitRail rail)
