@@ -1,11 +1,7 @@
-﻿using Fushigi.util;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+﻿using Fushigi.Logger;
+using Fushigi.util;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Fushigi.rstb
 {
@@ -56,7 +52,7 @@ namespace Fushigi.rstb
                 HashToResourceSize[hash] = CalculateResourceSize(decompressed_size, ext);
             else
             {
-                Console.WriteLine($"Warning! File {path} not found in resource table!");
+                Logger.Logger.LogWarning("GLTexture", $"Warning! File {path} not found in resource table!");
             }
         }
 
@@ -78,12 +74,13 @@ namespace Fushigi.rstb
         /// <summary>
         /// Save the resource table to the saved romfs path configured in the tool settings.
         /// </summary>
-        public void Save()
+        public void Save(string dir = "")
         {
             if (HashToResourceSize.Count == 0) //File not loaded, return
                 return;
            
-            string dir = Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource");
+            if (dir == "")
+                dir = Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource");
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             var mem = new MemoryStream();
@@ -98,6 +95,7 @@ namespace Fushigi.rstb
             }
             catch (IOException e)
             {
+                Logger.Logger.LogError(e);
                 //Likely due to the course being open in the game, caught to prevent crash
                 //TODO: notify the user
             }
@@ -203,15 +201,15 @@ namespace Fushigi.rstb
                 string path = $"{folder}/{Path.GetFileName(file).Replace(".zs", "")}";
                 uint hash = Crc32.Compute(path);
 
-                if (this.HashToResourceSize.ContainsKey(hash))
+                if (HashToResourceSize.TryGetValue(hash, out uint value))
                 {
                     //Round to nearest 32
                     size = (size + 31) & -32;
 
                     //Find difference in raw file size and resource size
-                    uint resource_size = this.HashToResourceSize[hash];
+                    uint resource_size = value;
                     int diff = (int)resource_size - size;
-                    Console.WriteLine($"decomp_size {size} resource_size difference {diff} path {path}");
+                    Logger.Logger.LogMessage("RSTB", $"decomp_size {size} resource_size difference {diff} path {path}");
                 }
             }
         }

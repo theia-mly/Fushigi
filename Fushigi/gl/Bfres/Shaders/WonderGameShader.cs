@@ -1,16 +1,8 @@
 ﻿using Fushigi.Bfres;
 using Silk.NET.OpenGL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using Fushigi.util;
 using Fushigi.env;
-using System.Runtime.Intrinsics.Arm;
-using static Fushigi.gl.Bfres.GsysEnvironment;
-using Silk.NET.Core.Native;
 
 namespace Fushigi.gl.Bfres
 {
@@ -83,7 +75,7 @@ namespace Fushigi.gl.Bfres
             }
         }
 
-        class ShapeBlock 
+        new class ShapeBlock 
         {
             public Matrix4x4 ShapeMatrix = Matrix4x4.Identity;
 

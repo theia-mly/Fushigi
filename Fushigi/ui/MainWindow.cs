@@ -6,30 +6,56 @@ using Fushigi.ui.widgets;
 using Fushigi.util;
 using Fushigi.windowing;
 using ImGuiNET;
+using Silk.NET.Core;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.PixelFormats;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
 
 namespace Fushigi.ui
 {
-    public class MainWindow : IPopupModalHost
+    public partial class MainWindow : IPopupModalHost
     {
-        private GLTaskScheduler mGLTaskScheduler = new();
-        private PopupModalHost mModalHost = new();
+        private readonly GLTaskScheduler mGLTaskScheduler = new();
+        private readonly PopupModalHost mModalHost = new();
 
         private ImFontPtr mDefaultFont;
-        private ImFontPtr mIconFont;
+        private readonly ImFontPtr mIconFont;
+
+        private static readonly Dictionary<int, RawImage> Icons = [];
 
         public MainWindow()
         {
+            Logger.Logger.LogMessage("MainWindow", "Loading icons");
+
+            unsafe
+            {
+                for (int i = 1; i < 10; i++)
+                {
+                    using var image = SixLabors.ImageSharp.Image.Load<Rgba32>(Path.Combine("res", $"icon{i}.png"));
+                    var memoryGroup = image.GetPixelMemoryGroup();
+                    Memory<byte> array = new byte[memoryGroup.TotalLength * sizeof(Rgba32)];
+                    var block = MemoryMarshal.Cast<byte, Rgba32>(array.Span);
+                    foreach (var memory in memoryGroup)
+                    {
+                        memory.Span.CopyTo(block);
+                        block = block[memory.Length..];
+                    }
+
+                    Icons.Add(i, new RawImage(image.Width, image.Height, array));
+                }
+            }
+
             WindowManager.CreateWindow(out mWindow,
                 onConfigureIO: () =>
                 {
-                    Console.WriteLine("Initializing Window");
+                    Logger.Logger.LogMessage("MainWindow", "Initializing Window");
                     unsafe
                     {
+                        SetWindowIcon(1);
+
                         var io = ImGui.GetIO();
                         io.ConfigFlags = ImGuiConfigFlags.NavEnableKeyboard;
 
@@ -53,44 +79,47 @@ namespace Fushigi.ui
                         iconConfig->GlyphOffset = new Vector2(0);
 
                         float size = 16;
+                        mDefaultFont = io.Fonts.AddFontFromFileTTF(
+                            Path.Combine("res", "Font.ttf"),
+                            size, nativeConfig, io.Fonts.GetGlyphRangesDefault());
 
+                        io.Fonts.AddFontFromFileTTF(
+                           Path.Combine("res", "NotoSansCJKjp-Medium.otf"),
+                               size, nativeConfigJP, io.Fonts.GetGlyphRangesJapanese());
+
+                        //other fonts go here and follow the same schema
+                        GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { IconUtil.MIN_GLYPH_RANGE, IconUtil.MAX_GLYPH_RANGE, 0 }, GCHandleType.Pinned);
+                        try
                         {
-                            mDefaultFont = io.Fonts.AddFontFromFileTTF(
-                                Path.Combine("res", "Font.ttf"),
-                                size, nativeConfig, io.Fonts.GetGlyphRangesDefault());
+                            io.Fonts.AddFontFromFileTTF(
+                                Path.Combine("res", "la-regular-400.ttf"),
+                                size, iconConfig, rangeHandle.AddrOfPinnedObject());
 
-                             io.Fonts.AddFontFromFileTTF(
-                                Path.Combine("res", "NotoSansCJKjp-Medium.otf"),
-                                    size, nativeConfigJP, io.Fonts.GetGlyphRangesJapanese());
+                            io.Fonts.AddFontFromFileTTF(
+                                Path.Combine("res", "la-solid-900.ttf"),
+                                size, iconConfig, rangeHandle.AddrOfPinnedObject());
 
-                            //other fonts go here and follow the same schema
-                            GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { IconUtil.MIN_GLYPH_RANGE, IconUtil.MAX_GLYPH_RANGE, 0 }, GCHandleType.Pinned);
-                            try
-                            {
-                                io.Fonts.AddFontFromFileTTF(
-                                    Path.Combine("res", "la-regular-400.ttf"),
-                                    size, iconConfig, rangeHandle.AddrOfPinnedObject());
+                            io.Fonts.AddFontFromFileTTF(
+                                Path.Combine("res", "la-brands-400.ttf"),
+                                size, iconConfig, rangeHandle.AddrOfPinnedObject());
 
-                                io.Fonts.AddFontFromFileTTF(
-                                    Path.Combine("res", "la-solid-900.ttf"),
-                                    size, iconConfig, rangeHandle.AddrOfPinnedObject());
-
-                                io.Fonts.AddFontFromFileTTF(
-                                    Path.Combine("res", "la-brands-400.ttf"),
-                                    size, iconConfig, rangeHandle.AddrOfPinnedObject());
-
-                                io.Fonts.Build();
-                            }
-                            finally
-                            {
-                                if (rangeHandle.IsAllocated)
-                                    rangeHandle.Free();
-                            }
+                            io.Fonts.Build();
+                        }
+                        finally
+                        {
+                            if (rangeHandle.IsAllocated)
+                                rangeHandle.Free();
                         }
                     }
                 });
             mWindow.Load += () => WindowManager.RegisterRenderDelegate(mWindow, Render);
             mWindow.Closing += Close;
+        }
+
+        public void SetWindowIcon(int id)
+        {
+            var icon = Icons[id];
+            mWindow.SetWindowIcon(ref icon);
         }
 
         public async Task<bool> TryCloseCourse()
@@ -106,9 +135,7 @@ namespace Fushigi.ui
                     return true;
                 }
                 else
-                {
                     return false;
-                }
             }
 
             return true;
@@ -133,7 +160,6 @@ namespace Fushigi.ui
                     mSkipCloseTest = true;
                     mWindow.Close();
                 }
-
             }).ConfigureAwait(false); //fire and forget
         }
 
@@ -176,7 +202,6 @@ namespace Fushigi.ui
 
                     await LoadParamDBWithProgressBar(this);
                     await Task.Delay(500); 
-                    
                 }
 
                 string? latestCourse = UserSettings.GetLatestCourse();
@@ -247,7 +272,7 @@ namespace Fushigi.ui
                                 if (await TryCloseCourse())
                                 {
                                     mCurrentCourseName = selectedCourse;
-                                    Console.WriteLine($"Selected course {mCurrentCourseName}!");
+                                    Logger.Logger.LogMessage("MainWindow", $"Selected course {mCurrentCourseName}!");
                                     await LoadCourseWithProgressBar(mCurrentCourseName);
                                     UserSettings.AppendRecentCourse(mCurrentCourseName);
                                 }
@@ -273,7 +298,7 @@ namespace Fushigi.ui
                             FolderDialog dlg = new FolderDialog();
                             if (dlg.ShowDialog("Select the romfs directory to save to."))
                             {
-                                Console.WriteLine($"Setting RomFS path to {dlg.SelectedPath}");
+                                Logger.Logger.LogMessage("MainWindow", $"Setting RomFS path to {dlg.SelectedPath}");
                                 UserSettings.SetModRomFSPath(dlg.SelectedPath);
                                 mSelectedCourseScene.Save();
                             }
@@ -307,9 +332,7 @@ namespace Fushigi.ui
 
                     /* a ImGUI menu item that just closes the application */
                     if (ImGui.MenuItem("Close"))
-                    {
                         mWindow.Close();
-                    }
 
                     /* end File menu */
                     ImGui.EndMenu();
@@ -318,24 +341,16 @@ namespace Fushigi.ui
                 if (ImGui.BeginMenu("Edit"))
                 {
                     if (ImGui.MenuItem("Preferences"))
-                    {
                         mIsShowPreferenceWindow = true;
-                    }
 
                     if (ImGui.MenuItem("Regenerate Parameter Database", ParamDB.sIsInit))
-                    {
                         _ = LoadParamDBWithProgressBar(this);
-                    }
 
                     if (ImGui.MenuItem("Undo"))
-                    {
                         mSelectedCourseScene?.Undo();
-                    }
 
                     if (ImGui.MenuItem("Redo"))
-                    {
                         mSelectedCourseScene?.Redo();
-                    }
 
                     /* end Edit menu */
                     ImGui.EndMenu();
@@ -368,7 +383,6 @@ namespace Fushigi.ui
 
             DrawMainMenu();
 
-            
             if (!string.IsNullOrEmpty(RomFS.GetRoot()) &&
                 !string.IsNullOrEmpty(UserSettings.GetModRomFSPath()))
             {
@@ -376,9 +390,7 @@ namespace Fushigi.ui
             }
 
             if (mIsShowPreferenceWindow)
-            {
                 Preferences.Draw(ref mIsShowPreferenceWindow, mGLTaskScheduler, this);
-            }
 
             mModalHost.DrawHostedModals();
 
@@ -397,25 +409,11 @@ namespace Fushigi.ui
             return mModalHost.ShowPopUp(modal, title, windowFlags, minWindowSize);
         }
 
-        public Task WaitTick()
-        {
-            return ((IPopupModalHost)mModalHost).WaitTick();
-        }
+        public Task WaitTick() => ((IPopupModalHost)mModalHost).WaitTick();
 
         readonly IWindow mWindow;
         string? mCurrentCourseName;
         CourseScene? mSelectedCourseScene;
         bool mIsShowPreferenceWindow = false;
-
-
-        class WelcomeMessage : OkDialog<WelcomeMessage>
-        {
-            protected override string Title => "Welcome";
-
-            protected override void DrawBody()
-            {
-                ImGui.Text("Welcome to Fushigi! Set the RomFS game path and save directory to get started.");
-            }
-        }
     }
 }

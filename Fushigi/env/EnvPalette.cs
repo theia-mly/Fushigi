@@ -13,6 +13,7 @@ using Fushigi.gl;
 using ImGuiNET;
 using static Fushigi.gl.Bfres.GsysEnvironment;
 using System.Diagnostics;
+using Fushigi.Logger;
 
 namespace Fushigi.env
 {
@@ -64,7 +65,7 @@ namespace Fushigi.env
 
             var byml = new Byml.Byml(new MemoryStream(File.ReadAllBytes(file_path)));
             this.Load((BymlHashTable)byml.Root);
-            Console.WriteLine($"EnvPalette {name}");
+            Logger.Logger.LogMessage("EnvPalette", name);
         }
 
         public void Lerp(EnvPalette prevPalette, EnvPalette nextPalette, float ratio)

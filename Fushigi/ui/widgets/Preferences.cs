@@ -3,7 +3,6 @@ using Fushigi.param;
 using Fushigi.ui.modal;
 using Fushigi.util;
 using ImGuiNET;
-using Silk.NET.OpenGL;
 using System.Numerics;
 
 namespace Fushigi.ui.widgets
@@ -24,6 +23,9 @@ namespace Fushigi.ui.widgets
                 var mod = UserSettings.GetModRomFSPath();
                 var useGameShaders = UserSettings.UseGameShaders();
                 var useAstcTextureCache = UserSettings.UseAstcTextureCache();
+                var hideDeletingLinkedActorsPopup = UserSettings.HideDeletingLinkedActorsPopup();
+                var useNewCamera = UserSettings.GetUseNewCamera();
+                var backupFreqMinutes = UserSettings.GetBackupFreqMinutes();
 
                 ImGui.Indent();
 
@@ -99,6 +101,23 @@ namespace Fushigi.ui.widgets
                 }
 
                 Tooltip.Show("Saves ASTC textures to disk which takes up disk space, but improves loading times and ram usage significantly.");
+
+                if (ImGui.Checkbox("Hide Deleting Linked Actors Popup", ref hideDeletingLinkedActorsPopup))
+                {
+                    UserSettings.SetHideDeletingLinkedObjectsPopup(hideDeletingLinkedActorsPopup);
+                }
+
+                Tooltip.Show("Hides the warning popup when you delete actors with links.");
+
+                if (ImGui.Checkbox("Use New Camera [BETA!]", ref useNewCamera))
+                    UserSettings.SetUseNewCamera(useNewCamera);
+
+                Tooltip.Show("Uses a new camera system that aims to be more accurate.\nWARNING: in beta and might cause some issues");
+
+                if (ImGui.InputFloat("Backup Frequency (in minutes)", ref backupFreqMinutes))
+                    UserSettings.SetBackupFreqMinutes(backupFreqMinutes);
+
+                Tooltip.Show("How long between each backup, in minutes.\nBackups are stored wherever Fushigi is installed to.");
 
                 ImGui.Unindent();
 

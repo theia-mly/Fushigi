@@ -1,5 +1,6 @@
 ﻿using Fushigi.gl;
 using Fushigi.param;
+using Fushigi.util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,7 +61,7 @@ namespace Fushigi.course.distance_view
 
         public void Calc(Vector3 camera_pos)
         {
-            foreach (var layer in this.ParamTable.Layers.Keys)
+            foreach (var layer in ParamTable.Layers.Keys)
             {
                 var scroll_config = ParamTable.Layers[layer];
                 var locator_pos = DVLocator != null ? DVLocator.mTranslation : Vector3.Zero;
@@ -68,18 +69,35 @@ namespace Fushigi.course.distance_view
                 //Place via base locator pos + camera
 
                 //Distance between dv locator and camera
-                Vector2 distance = new Vector2(camera_pos.X - locator_pos.X, camera_pos.Y - locator_pos.Y);
-                Vector2 movement_ratio = new Vector2(1.0f) - scroll_config;
-                Vector2 scroll_time_rate = new Vector2(1.0f - ScrollSpeedX, 1.0f - ScrollSpeedY);
+                if (UserSettings.GetUseNewCamera())
+                {
+                    Vector2 distance = new(camera_pos.X - locator_pos.X, camera_pos.Y - locator_pos.Y);
+                    Vector2 movement_ratio = new Vector2(1f, 1f) - scroll_config;
+                    Vector2 scroll_time_rate = new(0.960f - ScrollSpeedX, 1.9f - ScrollSpeedY);
 
-                float posX = 0, posY = 0;
+                    float posX = 0;//, posY = 0;
 
-                if (scroll_config.X != 1 && scroll_time_rate.X != 0)
-                    posX = distance.X * movement_ratio.X * scroll_time_rate.X;
-                if (scroll_config.X != 1 && scroll_time_rate.Y != 0)
-                    posY = distance.Y * movement_ratio.Y * scroll_time_rate.Y;
+                    if (scroll_config.X != 1 && scroll_time_rate.X != 0)
+                        posX = distance.X * movement_ratio.X * scroll_time_rate.X;
+                    //if (scroll_config.X != 1 && scroll_time_rate.Y != 0)
+                    //    posY = distance.Y * movement_ratio.Y * scroll_time_rate.Y;
 
-                LayerMatrices[layer] = Matrix4x4.CreateTranslation(posX, posY, 0);
+                    LayerMatrices[layer] = Matrix4x4.CreateTranslation(posX + movement_ratio.X * scroll_time_rate.X * 2, movement_ratio.Y * scroll_time_rate.Y, 0);
+                } else
+                {
+                    Vector2 distance = new Vector2(camera_pos.X - locator_pos.X, camera_pos.Y - locator_pos.Y);
+                    Vector2 movement_ratio = new Vector2(1.0f) - scroll_config;
+                    Vector2 scroll_time_rate = new Vector2(1.0f - ScrollSpeedX, 1.0f - ScrollSpeedY);
+
+                    float posX = 0, posY = 0;
+
+                    if (scroll_config.X != 1 && scroll_time_rate.X != 0)
+                        posX = distance.X * movement_ratio.X * scroll_time_rate.X;
+                    if (scroll_config.X != 1 && scroll_time_rate.Y != 0)
+                        posY = distance.Y * movement_ratio.Y * scroll_time_rate.Y;
+
+                    LayerMatrices[layer] = Matrix4x4.CreateTranslation(posX, posY, 0);
+                }
             }
         }
     }

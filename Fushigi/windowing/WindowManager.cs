@@ -1,12 +1,10 @@
 ﻿using Fushigi.util;
-using ImGuiNET;
+using Silk.NET.Core;
 using Silk.NET.Core.Contexts;
-using Silk.NET.GLFW;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using Silk.NET.Windowing.Glfw;
 
 namespace Fushigi.windowing
 {
@@ -14,18 +12,19 @@ namespace Fushigi.windowing
     {
         public static IGLContext? SharedContext { get; private set; } = null;
 
-        private static GL? s_gl = null;
+        private static GL? sGL = null;
 
         private record struct WindowResources(ImGuiController ImguiController, IInputContext Input, GL Gl, bool HasRenderDelegate);
 
-        private static bool s_isRunning = false;
+        private static bool sIsRunning = false;
 
-        private static readonly List<IWindow> s_pendingInits = [];
-        private static readonly List<(IWindow window, WindowResources res)> s_windows = [];
+        private static readonly List<IWindow> sPendingInits = [];
+        private static readonly List<(IWindow window, WindowResources res)> sWindows = [];
 
         public static void CreateWindow(out IWindow window, Vector2D<int>? initialWindowSize = null, Action? onConfigureIO = null)
         {
             var options = WindowOptions.Default;
+            options.Title = $"Fushigi {Program.Version}";
             options.API = new GraphicsAPI(
                 ContextAPI.OpenGL,
                 ContextProfile.Core,
@@ -44,33 +43,32 @@ namespace Fushigi.windowing
 
             window.Load += () =>
             {
-                if(s_gl == null)
-                    s_gl = _window.CreateOpenGL();
+                sGL ??= _window.CreateOpenGL();
 
                 //initialization
                 if (_window.Native!.Win32.HasValue)
                     WindowsDarkmodeUtil.SetDarkmodeAware(_window.Native.Win32.Value.Hwnd);
 
                 var input = _window.CreateInput();
-                var imguiController = new ImGuiController(s_gl, _window, input, onConfigureIO);
+                var imguiController = new ImGuiController(sGL, _window, input, onConfigureIO);
 
                 //update
                 _window.Update += ds => imguiController.Update((float)ds);
 
-                s_windows.Add((_window, new WindowResources(imguiController, input, s_gl, false)));
+                sWindows.Add((_window, new WindowResources(imguiController, input, sGL, false)));
             };
 
-            s_pendingInits.Add(window);
+            sPendingInits.Add(window);
         }
 
         public static void RegisterRenderDelegate(IWindow window, Action<GL, double, ImGuiController> renderGLDelegate)
         {
-            int idx = s_windows.FindIndex(x => x.window == window);
+            int idx = sWindows.FindIndex(x => x.window == window);
 
             if (idx == -1)
                 throw new Exception($"window was not created using the {nameof(WindowManager)} class");
 
-            var res = s_windows[idx].res;
+            var res = sWindows[idx].res;
 
             if(res.HasRenderDelegate)
                 throw new Exception("window has already registered a render delegate");
@@ -90,55 +88,46 @@ namespace Fushigi.windowing
             };
 
             res.HasRenderDelegate = true;
-            s_windows[idx] = (window, res);
+            sWindows[idx] = (window, res);
         }
 
         public static void Run()
         {
-            if (s_isRunning)
+            if (sIsRunning)
                 return;
 
-            s_isRunning = true;
+            sIsRunning = true;
 
-            while (s_windows.Count > 0 || s_pendingInits.Count > 0)
+            while (sWindows.Count > 0 || sPendingInits.Count > 0)
             {
-                if (s_pendingInits.Count > 0)
+                if (sPendingInits.Count > 0)
                 {
-                    foreach (var window in s_pendingInits)
+                    foreach (var window in sPendingInits)
                     {
                         window.Initialize();
-
-                        if (SharedContext == null)
-                            SharedContext = window.GLContext;
+                        SharedContext ??= window.GLContext;
                     }
 
-                    s_pendingInits.Clear();
+                    sPendingInits.Clear();
                 }
 
-
-                for (int i = 0; i < s_windows.Count; i++)
+                for (int i = 0; i < sWindows.Count; i++)
                 {
-                    var (window, res) = s_windows[i];
+                    var (window, res) = sWindows[i];
 
                     window.DoEvents();
                     if (!window.IsClosing)
-                    {
                         window.DoUpdate();
-                    }
 
                     if (!window.IsClosing)
-                    {
                         window.DoRender();
-                    }
 
                     if (window.IsClosing)
                     {
-                        s_windows.RemoveAt(i);
+                        sWindows.RemoveAt(i);
 
-                        if (window.GLContext == SharedContext && s_windows.Count > 0)
-                        {
-                            SharedContext = s_windows[0].window.GLContext;
-                        }
+                        if (window.GLContext == SharedContext && sWindows.Count > 0)
+                            SharedContext = sWindows[0].window.GLContext;
 
                         res.Input.Dispose();
                         res.ImguiController.Dispose();
@@ -151,7 +140,7 @@ namespace Fushigi.windowing
                 }
             }
 
-            s_gl?.Dispose();
+            sGL?.Dispose();
         }
     }
 }

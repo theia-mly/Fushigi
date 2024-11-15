@@ -1,11 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fushigi.util
 {
@@ -23,19 +16,25 @@ namespace Fushigi.util
         {
             public string RomFSPath;
             public string RomFSModPath;
+            public float BackupFreqMinutes = 10;
             public Dictionary<string, string> ModPaths;
             public List<string> RecentCourses;
             public bool UseGameShaders;
             public bool UseAstcTextureCache;
+            public bool HideDeletingLinkedActorsPopup;
+            public bool UseNewCamera;
 
             public Settings()
             {
+                BackupFreqMinutes = 10;
                 RomFSPath = "";
-                ModPaths = new();
+                ModPaths = [];
                 RomFSModPath = "";
                 RecentCourses = new List<string>(MaxRecents);
                 UseGameShaders = false;
                 UseAstcTextureCache = false;
+                HideDeletingLinkedActorsPopup = false;
+                UseNewCamera = true;
             }
         }
 
@@ -58,6 +57,7 @@ namespace Fushigi.util
 
         public static bool UseGameShaders() => AppSettings.UseGameShaders;
         public static bool UseAstcTextureCache() => AppSettings.UseAstcTextureCache;
+        public static bool HideDeletingLinkedActorsPopup() => AppSettings.HideDeletingLinkedActorsPopup;
 
         public static void SetGameShaders(bool value)
         {
@@ -68,6 +68,12 @@ namespace Fushigi.util
         public static void SetAstcTextureCache(bool value)
         {
             AppSettings.UseAstcTextureCache = value;
+            Save(); //save setting
+        }
+
+        public static void SetHideDeletingLinkedObjectsPopup(bool value)
+        {
+            AppSettings.HideDeletingLinkedActorsPopup = value;
             Save(); //save setting
         }
 
@@ -83,6 +89,25 @@ namespace Fushigi.util
             Save(); //save setting
         }
 
+        public static void SetUseNewCamera(bool newCamera)
+        {
+            AppSettings.UseNewCamera = newCamera;
+            Save();
+        }
+
+        public static void SetBackupFreqMinutes(float minutes)
+        {
+            AppSettings.BackupFreqMinutes = minutes;
+            Save();
+        }
+
+        public static float GetBackupFreqMinutes()
+        {
+            if (AppSettings.BackupFreqMinutes == 0)
+                SetBackupFreqMinutes(10);
+            return AppSettings.BackupFreqMinutes;
+        }
+
         public static string GetRomFSPath()
         {
             return AppSettings.RomFSPath;
@@ -91,6 +116,11 @@ namespace Fushigi.util
         public static string GetModRomFSPath()
         {
             return AppSettings.RomFSModPath;
+        }
+
+        public static bool GetUseNewCamera()
+        {
+            return AppSettings.UseNewCamera;
         }
 
         public static void AppendModPath(string modname, string path)

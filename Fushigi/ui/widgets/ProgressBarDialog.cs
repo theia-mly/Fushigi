@@ -60,6 +60,7 @@ namespace Fushigi.ui.widgets
             {
                 mProgressValue = p.progress;
                 mOperationName = p.operationName;
+                Logger.Logger.LogMessage("ProgressBarDialog", $"{mOperationName} ({mProgressValue:P0})");
             };
         }
 

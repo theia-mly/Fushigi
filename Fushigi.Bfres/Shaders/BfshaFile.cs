@@ -1,6 +1,5 @@
 ﻿using Fushigi.Bfres.Common;
 
-
 namespace Fushigi.Bfres
 {
     public class BfshaFile
@@ -31,7 +30,7 @@ namespace Fushigi.Bfres
 
             Name = reader.ReadStringOffset(Header.NameOffset);
 
-            Console.WriteLine($"Bfsha {Name}");
+            Logger.Logger.LogMessage("BfshaFile", $"Bfsha {Name}");
 
             ShaderModels = reader.ReadDictionary<ShaderModel>(
                 Header.ShaderModelDictionaryOffset,

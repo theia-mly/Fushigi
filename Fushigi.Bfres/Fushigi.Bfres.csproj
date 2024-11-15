@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Fushigi.Logger\Fushigi.Logger.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Ryujinx.Common">
       <HintPath>ExternalLibraries\Ryujinx.Common.dll</HintPath>
     </Reference>

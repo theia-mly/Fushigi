@@ -1,16 +1,11 @@
 ﻿using Fushigi.util;
 using Silk.NET.OpenGL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fushigi.gl.Bfres
 {
     public class BfresCache
     {
-        public static Dictionary<string, Task<BfresRender?>> Cache = [];
+        public static readonly Dictionary<string, Task<BfresRender?>> Cache = [];
 
         [Obsolete("Only exists for compatibility with the tile rendering branch")]
         public static BfresRender? Load(GL gl, string projectName)
@@ -24,9 +19,7 @@ namespace Fushigi.gl.Bfres
                         new BfresRender(gl, FileUtil.DecompressAsStream(path))));
                 }
                 else //use null renderer to not check the file again (todo this function should only load during course load)
-                {
                     Cache.Add(projectName, Task.FromResult<BfresRender?>(null));
-                }
             }
             var task = Cache[projectName];
             return task.IsCompletedSuccessfully ? task.Result : null;
@@ -38,13 +31,9 @@ namespace Fushigi.gl.Bfres
             {
                 var path = FileUtil.FindContentPath(Path.Combine("Model", projectName + ".bfres.zs"));
                 if (File.Exists(path))
-                {
                     Cache.Add(projectName, LoadInternal(glScheduler, path));
-                }
                 else //use null renderer to not check the file again (todo this function should only load during course load)
-                {
                     Cache.Add(projectName, Task.FromResult<BfresRender?>(null));
-                }
             }
             var task = Cache[projectName];
             return task;

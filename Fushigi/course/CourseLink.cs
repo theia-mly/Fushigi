@@ -1,11 +1,5 @@
 ﻿using Fushigi.Byml;
 using Fushigi.util;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fushigi.course
 {

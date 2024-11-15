@@ -11,7 +11,8 @@ namespace Fushigi.ui
     {
         private class BatchAction(EditContextBase context) : ICommittable
         {
-            public string Name { get; private set; }
+            public string? Name { get; private set; }
+
             public void Commit(string name)
             {
                 Name = name;

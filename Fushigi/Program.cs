@@ -3,56 +3,48 @@ using Fushigi.param;
 using Fushigi.ui;
 using System.Runtime.InteropServices;
 using Fushigi.windowing;
+using Fushigi.Logger;
+using Fushigi;
 
-
-FileStream outputStream = new FileStream("output.log", FileMode.Create);
-var consoleWriter = new StreamWriter(outputStream);
-consoleWriter.AutoFlush = true;
-#if !DEBUG
-Console.SetOut(consoleWriter);
-Console.SetError(consoleWriter);
-
-AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
-#endif
-
-Console.WriteLine("Starting Fushigi v0.6...");
-
-if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+internal class Program
 {
-  Console.WriteLine("Running on osx");
-} else {
-  Console.WriteLine("Not running on osx");
-};
+    public const string Version = "v1.1.7";
 
-Console.WriteLine("Loading user settings...");
-UserSettings.Load();
-Console.WriteLine("Loading parameter database...");
-ParamDB.Init();
-Console.WriteLine("Loading area parameter loader...");
-ParamLoader.Load();
+    public static MainWindow MainWindow { get; private set; }
 
-Console.WriteLine("Checking for imgui.ini");
-if (!Path.Exists("imgui.ini"))
-{
-  Console.WriteLine("Creating imgui.ini...");
-  File.WriteAllText("imgui.ini", File.ReadAllText(Path.Combine("res", "imgui-default.ini")));
-  Console.WriteLine("Created!");
-};
-
-MainWindow window = new MainWindow();
-WindowManager.Run();
-
-outputStream.Close();
-
-
-void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
-{
-    Exception? ex = e.ExceptionObject as Exception;
-    if (ex != null)
+    private static void Main(string[] args)
     {
-        Console.WriteLine(ex.Message);
-        Console.WriteLine(ex.StackTrace);
-    }
+        Logger.CreateLogger();
 
-    Environment.Exit(1);
+        AppDomain.CurrentDomain.UnhandledException += Logger.HandleUnhandledException;
+
+        Logger.LogMessage("Program", $"Starting Fushigi {Version}...");
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            Logger.LogMessage("Program", "Running on osx");
+        else
+            Logger.LogMessage("Program", "Not running on osx");
+
+        Logger.LogMessage("Program", "Loading user settings...");
+        UserSettings.Load();
+        Logger.LogMessage("Program", "Loading parameter database...");
+        ParamDB.Init();
+        Logger.LogMessage("Program", "Loading area parameter loader...");
+        ParamLoader.Load();
+
+        Logger.LogMessage("Program", "Checking for imgui.ini");
+        if (!Path.Exists("imgui.ini"))
+        {
+            Logger.LogMessage("Program", "Creating imgui.ini...");
+            File.WriteAllText("imgui.ini", File.ReadAllText(Path.Combine("res", "imgui-default.ini")));
+            Logger.LogMessage("Program", "Created!");
+        };
+
+        DRPC.Initialize();
+
+        MainWindow = new MainWindow();
+        WindowManager.Run();
+
+        Logger.CloseLogger();
+    }
 }

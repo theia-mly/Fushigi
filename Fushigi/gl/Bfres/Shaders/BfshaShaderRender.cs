@@ -30,10 +30,10 @@ namespace Fushigi.gl.Bfres
         private Material Material;
 
         public BfshaFile ShaderFile;
-        public BfshaFile.ShaderModel ShaderModel;
+        public ShaderModel ShaderModel;
 
         //Resources
-        private BfshaFile.ShaderProgram ShaderProgram;
+        private ShaderProgram ShaderProgram;
         private UniformBlock ConstantVSBlock;
         private UniformBlock ConstantFSBlock;
 
@@ -52,8 +52,11 @@ namespace Fushigi.gl.Bfres
             ShaderFile = TryGetShader(material.ShaderAssign.ShaderArchiveName, material.ShaderAssign.ShadingModelName);
 
             //Search for shader model
-            if (ShaderFile != null && ShaderFile.ShaderModels.ContainsKey(material.ShaderAssign.ShadingModelName))
-                ShaderModel = ShaderFile.ShaderModels[material.ShaderAssign.ShadingModelName];
+            if (ShaderFile != null &&
+                ShaderFile.ShaderModels.TryGetValue(material.ShaderAssign.ShadingModelName, out ShaderModel? value))
+            {
+                ShaderModel = value;
+            }
 
             if (ShaderModel == null)
                 return;
@@ -65,7 +68,7 @@ namespace Fushigi.gl.Bfres
             if (SupportBlock == null)
             {
                 SupportBlock = new UniformBlock(gl);
-                this.LoadSupportingBlock();
+                LoadSupportingBlock();
             }
 
             GLUtil.Label(gl, ObjectIdentifier.Buffer, MaterialBlock.ID,  "Material Block");
@@ -94,7 +97,7 @@ namespace Fushigi.gl.Bfres
 
         public virtual void ReloadMaterialBlock()
         {
-            SetMaterialBlock(this.MaterialBlock, this.Material);
+            SetMaterialBlock(MaterialBlock, Material);
         }
 
 
@@ -129,36 +132,25 @@ namespace Fushigi.gl.Bfres
         /// <summary>
         /// Finds the shader to use via material options and mesh skin count. 
         /// </summary>
-        public virtual BfshaFile.ShaderProgram ReloadProgram(byte skinCount)
-        {
-            return null; 
-        }
+        public virtual ShaderProgram ReloadProgram(byte skinCount) => null;
 
         /// <summary>
         /// Looks for a texture to use that is not present in the bfres.
         /// </summary>
-        public virtual GLTexture GetExternalTexture(GL gl, string sampler)
-        {
-            return null;
-        }
+        public virtual GLTexture GetExternalTexture(GL gl, string sampler) => null;
 
         /// <summary>
         /// Looks for the uniform block resource to bind.
         /// </summary>
-        public virtual UniformBlock GetUniformBlock(string name)
-        {
-            return null;
-        }
+        public virtual UniformBlock GetUniformBlock(string name) => null;
 
         /// <summary>
         /// Compiles the given bfsha program to "ShaderInfo" with glsl code.
         /// </summary>
-        public void CompileShader(GL gl, BfshaFile.ShaderProgram program)
+        public void CompileShader(GL gl, ShaderProgram program)
         {
-            var variation = ShaderModel.GetShaderVariation(program);
-            if (variation == null)
-                throw new Exception($"Failed to load shader variation!");
-
+            var variation = ShaderModel.GetShaderVariation(program)
+                ?? throw new Exception($"Failed to load shader variation!");
             ShaderInfo = TegraShaderDecoder.LoadShaderProgram(gl, variation);
 
             if (ShaderInfo.VertexConstants != null)
@@ -182,7 +174,7 @@ namespace Fushigi.gl.Bfres
 
             SkeletonBlock = model.SkeletonBuffer;
 
-            this.SetShapeBlock(ShapeBlock, transform);
+            SetShapeBlock(ShapeBlock, transform);
             SetSkeletonBlock(SkeletonBlock, model, transform);
 
             if (ShaderInfo == null)
@@ -203,12 +195,10 @@ namespace Fushigi.gl.Bfres
             int ubo_bind = 1;
 
             //Constants
-            if (this.ConstantVSBlock != null)
-                ConstantVSBlock.Render(this.ShaderInfo.Shader.ID, "_vp_c1", ubo_bind++);
-            if (this.ConstantFSBlock != null)
-                ConstantFSBlock.Render(this.ShaderInfo.Shader.ID, "_fp_c1", ubo_bind++);
+            ConstantVSBlock?.Render(ShaderInfo.Shader.ID, "_vp_c1", ubo_bind++);
+            ConstantFSBlock?.Render(ShaderInfo.Shader.ID, "_fp_c1", ubo_bind++);
 
-            SupportBlock.Render(this.ShaderInfo.Shader.ID, "_support_buffer", ubo_bind++);
+            SupportBlock.Render(ShaderInfo.Shader.ID, "_support_buffer", ubo_bind++);
 
             ubo_bind = 5;
 
@@ -217,8 +207,7 @@ namespace Fushigi.gl.Bfres
             {
                 string name = ShaderModel.UniformBlocks.GetKey(i);
                 //Get the shader location info
-                var locationInfo = this.ShaderProgram.UniformBlockIndices[i];
-                int fragLocation = locationInfo.FragmentLocation;
+                var locationInfo = ShaderProgram.UniformBlockIndices[i];
                 int vertLocation = locationInfo.VertexLocation;
 
                 //Block unused for this program so skip it
@@ -233,16 +222,15 @@ namespace Fushigi.gl.Bfres
 
                 //Bind uniform data to the vertex and/or pixel location and prepare a binding ID
                 //Prepare a unique binding per stage
-                BindUniformBlock(shaderBlock, this.ShaderInfo.Shader.ID, vertLocation, -1, ubo_bind++);
+                BindUniformBlock(shaderBlock, ShaderInfo.Shader.ID, vertLocation, -1, ubo_bind++);
             }
 
             for (int i = 0; i < ShaderModel.UniformBlocks.Count; i++)
             {
                 string name = ShaderModel.UniformBlocks.GetKey(i);
                 //Get the shader location info
-                var locationInfo = this.ShaderProgram.UniformBlockIndices[i];
+                var locationInfo = ShaderProgram.UniformBlockIndices[i];
                 int fragLocation = locationInfo.FragmentLocation;
-                int vertLocation = locationInfo.VertexLocation;
 
                 //Block unused for this program so skip it
                 if (fragLocation == -1)
@@ -256,16 +244,13 @@ namespace Fushigi.gl.Bfres
 
                 //Bind uniform data to the vertex and/or pixel location and prepare a binding ID
                 //Prepare a unique binding per stage
-                BindUniformBlock(shaderBlock, this.ShaderInfo.Shader.ID, -1, fragLocation, ubo_bind++);
+                BindUniformBlock(shaderBlock, ShaderInfo.Shader.ID, -1, fragLocation, ubo_bind++);
             }
         }
 
         //Bind sampler data
         private void BindSamplers(GL gl, BfresRender renderer)
         {
-            int id = 1;
-
-
             BindBindlessTextures(gl, ShaderInfo.Shader);
 
             for (int i = 0; i < ShaderModel.Samplers.Count; i++)
@@ -281,7 +266,7 @@ namespace Fushigi.gl.Bfres
 
             for (int i = 0; i < ShaderModel.Samplers.Count; i++)
             {
-                var locationInfo = this.ShaderProgram.SamplerIndices[i];
+                var locationInfo = ShaderProgram.SamplerIndices[i];
                 //Currently only using the vertex and fragment stages
                 if (locationInfo.VertexLocation == -1 && locationInfo.FragmentLocation == -1)
                     continue;
@@ -292,14 +277,14 @@ namespace Fushigi.gl.Bfres
              //   Console.WriteLine($"sampler {sampler} loc {locationInfo.FragmentLocation} slot {i} uniform {ConvertSamplerID(locationInfo.FragmentLocation)}");
 
                 //Sampler assign has a key list of fragment shader samplers, value list of bfres material samplers
-                if (this.Material.ShaderAssign.SamplerAssign.ContainsKey(sampler))
+                if (Material.ShaderAssign.SamplerAssign.ContainsKey(sampler))
                 {
                     //Get the resource sampler
                     //Important to note, fragment samplers are unique while material samplers can be the same
                     //So we need to lookup which material sampler the current fragment sampler uses.
-                    string resSampler = this.Material.ShaderAssign.SamplerAssign[sampler].String;
+                    string resSampler = Material.ShaderAssign.SamplerAssign[sampler].String;
                     //Find a texture using the sampler
-                    textureIndex = this.Material.Samplers.Keys.ToList().FindIndex(x => x == resSampler);
+                    textureIndex = Material.Samplers.Keys.ToList().FindIndex(x => x == resSampler);
                 }
 
                 var slot = i + 1;
@@ -315,7 +300,7 @@ namespace Fushigi.gl.Bfres
                 }
                 else //Bind texture inside the bfres material
                 {
-                    var texMap = this.Material.Textures[textureIndex];
+                    var texMap = Material.Textures[textureIndex];
                     tex = TryGetTexture(gl, renderer, texMap);
                 }
 
@@ -330,7 +315,7 @@ namespace Fushigi.gl.Bfres
 
                     if (textureIndex != -1)
                     {
-                        var samplerConfig = this.Material.Samplers[textureIndex];
+                        var samplerConfig = Material.Samplers[textureIndex];
                         SetupSampler(gl, tex, samplerConfig);
                     }
 

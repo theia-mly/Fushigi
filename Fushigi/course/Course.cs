@@ -1,17 +1,7 @@
-﻿
-using Silk.NET.Windowing;
-using Silk.NET.OpenGL;
-using ImGuiNET;
-using Fushigi.util;
-using Fushigi.windowing;
+﻿using Fushigi.util;
 using Fushigi.Byml;
-using Fushigi.Byml.Writer;
-using Fushigi.Byml.Writer.Primitives;
-using Fushigi;
-using Fushigi.course;
 using Fushigi.rstb;
-using Fushigi.ui.widgets;
-using System.IO;
+using Fushigi.Logger;
 
 namespace Fushigi.course
 {
@@ -20,7 +10,7 @@ namespace Fushigi.course
         public Course(string courseName)
         {
             mCourseName = courseName;
-            mAreas = new List<CourseArea>();
+            mAreas = [];
             LoadFromRomFS();
         }
 
@@ -58,34 +48,25 @@ namespace Fushigi.course
 
             if (root.ContainsKey("Links"))
             {
-                var linksArr = root["Links"] as BymlArrayNode;
-                mGlobalLinks = new(linksArr);
+                if (root["Links"] is BymlArrayNode linksArr)
+                {
+                    mGlobalLinks = new(linksArr);
+                    return;
+                }
             }
-            else
-            {
-                mGlobalLinks = new(new BymlArrayNode());
-            }
+
+            mGlobalLinks = new(new BymlArrayNode());
         }
 
-        public List<CourseArea> GetAreas()
-        {
-            return mAreas;
-        }
+        public List<CourseArea> GetAreas() => mAreas;
 
-        public CourseArea GetArea(int idx)
-        {
-            return mAreas.ElementAt(idx);
-        }
+        public CourseArea GetArea(int idx) => mAreas.ElementAt(idx);
 
         public CourseArea? GetArea(string name)
         {
             foreach (CourseArea area in mAreas)
-            {
                 if (area.GetName() == name)
-                {
                     return area;
-                }
-            }
 
             return null;
         }
@@ -97,16 +78,28 @@ namespace Fushigi.course
 
         public void AddGlobalLink()
         {
+            if (mGlobalLinks == null)
+            {
+                Logger.Logger.LogWarning("Course", "mGlobalLinks == null! (AddGlobalLink)");
+                return;
+            }
+
             CourseLink link = new("Reference");
             mGlobalLinks.mLinks.Add(link);
         }
 
         public void RemoveGlobalLink(CourseLink link)
         {
+            if (mGlobalLinks == null)
+            {
+                Logger.Logger.LogWarning("Course", "mGlobalLinks == null! (RemoveGlobalLink)");
+                return;
+            }
+
             mGlobalLinks.mLinks.Remove(link);
         }
 
-        public CourseLinkHolder GetGlobalLinks()
+        public CourseLinkHolder? GetGlobalLinks()
         {
             return mGlobalLinks;
         }
@@ -123,9 +116,7 @@ namespace Fushigi.course
             BymlArrayNode refArr = new();
 
             foreach (CourseArea area in mAreas)
-            {
                 refArr.AddNodeToArray(BymlUtil.CreateNode($"Work/Stage/StageParam/{area.GetName()}.game__stage__StageParam.gyml"));
-            }
 
             stageParamRoot.AddNode(BymlNodeId.Array, refArr, "RefStages");
 
@@ -151,14 +142,14 @@ namespace Fushigi.course
             //Save each course area to current romfs folder
             foreach (var area in GetAreas())
             {
-                Console.WriteLine($"Saving area {area.GetName()}...");
+                Logger.Logger.LogMessage("Course", $"Saving area {area.GetName()}...");
 
                 area.Save(resTable);
             }
         }
 
-        string mCourseName;
-        List<CourseArea> mAreas;
-        CourseLinkHolder mGlobalLinks;
+        readonly string mCourseName;
+        readonly List<CourseArea> mAreas;
+        CourseLinkHolder? mGlobalLinks;
     }
 }
