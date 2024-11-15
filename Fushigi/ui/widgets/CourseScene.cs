@@ -515,57 +515,69 @@ namespace Fushigi.ui.widgets
         
         public void Save(bool backup = false, string backupFolder = "")
         {
-            RSTB resource_table = new RSTB();
-            resource_table.Load();
+            var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
+            if (!Directory.Exists(rstbPath))
+                    Directory.CreateDirectory(rstbPath);
+            string[] sizeTables = Directory.GetFiles(rstbPath);
+            foreach (string path in sizeTables)
+            {
+                RSTB resource_table = new RSTB();
+                resource_table.Load(Path.GetFileName(path));
 
-            List<string> pathsToWriteTo;
-            DateTime now = DateTime.Now;
-            if (backupFolder == "")
-                backupFolder = Directory.GetCurrentDirectory() + $"/backups/{now.Year}-{now.Month}-{now.Day}_{now.Hour}-{now.Minute}-{now.Second}/";
-            if (backup)
-            {
-                Directory.CreateDirectory(backupFolder);
-                pathsToWriteTo = course.GetAreas().Select(
-                    a=> Path.Combine(backupFolder, "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
-                    ).ToList();
-                pathsToWriteTo.Add(
-                    Path.Combine(backupFolder, "System", "Resource", "ResourceSizeTable.Product.100.rsizetable.zs")
-                    );
-            } else
-            {
-                pathsToWriteTo = course.GetAreas().Select(
-                    a => Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
-                    ).ToList();
-                pathsToWriteTo.Add(
-                    Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", "ResourceSizeTable.Product.100.rsizetable.zs")
-                    );
-            }
+                List<string> pathsToWriteTo;
+                DateTime now = DateTime.Now;
+                if (backupFolder == "")
+                    backupFolder = Directory.GetCurrentDirectory() + $"/backups/{now.Year}-{now.Month}-{now.Day}_{now.Hour}-{now.Minute}-{now.Second}/";
+                if (backup)
+                {
+                    Directory.CreateDirectory(backupFolder);
+                    pathsToWriteTo = course.GetAreas().Select(
+                        a=> Path.Combine(backupFolder, "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
+                        ).ToList();
 
-            if (!pathsToWriteTo.All(EnsureFileIsWritable))
-            {
-                //one or more of the files are locked, due to being open externally. abandon save and show popup informing user
-                _ = SaveFailureAlert.ShowDialog(mPopupModalHost);
-                return;
-            }
+                    //Added Game Update Compatibility
+                    pathsToWriteTo.Add(
+                        Path.Combine(backupFolder, "System", "Resource", Path.GetFileName(path))
+                        );
+                }
+                else
+                {
+                    pathsToWriteTo = course.GetAreas().Select(
+                        a=> Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit", $"{a.GetName()}.bcett.byml.zs")
+                        ).ToList();
 
-            //Save each course area to current romfs folder
-            foreach (var area in course.GetAreas())
-            {
-                Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area {area.GetName()}...");
+                    //Added Game Update Compatibility
+                    pathsToWriteTo.Add(
+                        Path.Combine(UserSettings.GetModRomFSPath(), "System", "Resource", Path.GetFileName(path))
+                        );
+                }
+
+                if (!pathsToWriteTo.All(EnsureFileIsWritable))
+                {
+                    //one or more of the files are locked, due to being open externally. abandon save and show popup informing user
+                    _ = SaveFailureAlert.ShowDialog(mPopupModalHost);
+                    return;
+                }
+
+                //Save each course area to current romfs folder
+                foreach (var area in course.GetAreas())
+                {
+                    Console.WriteLine($"{(backup ? "Backing up" : "Saving")} area {area.GetName()}...");
+
+                    if (backup)
+                        area.Save(resource_table, Path.Combine(backupFolder, "BancMapUnit"));
+                    else
+                        area.Save(resource_table);
+                }
 
                 if (backup)
-                    area.Save(resource_table, Path.Combine(backupFolder, "BancMapUnit"));
+                    resource_table.Save();
                 else
-                    area.Save(resource_table);
+                    resource_table.Save(Path.Combine(backupFolder, "System", "Resource"));
+
+                if (backup == false)
+                    Save(backup: true, backupFolder);
             }
-
-            if (backup)
-                resource_table.Save();
-            else
-                resource_table.Save(Path.Combine(backupFolder, "System", "Resource"));
-
-            if (backup == false)
-                Save(backup: true, backupFolder);
         }
 
         bool EnsureFileIsWritable(string path)
@@ -618,6 +630,7 @@ namespace Fushigi.ui.widgets
 
         private string? mSelectedActor;
         private string? mSelectedLayer;
+        private bool placingActors;
         private string mAddActorSearchQuery = "";
         private string mAddLayerSearchQuery = "";
 
@@ -752,6 +765,9 @@ namespace Fushigi.ui.widgets
             var area = selectedArea;
             var ctx = areaScenes[selectedArea].EditContext;
 
+            if (placingActors) return;
+
+            placingActors = true;
             Vector3? pos;
             KeyboardModifier modifier;
             do
@@ -776,11 +792,10 @@ namespace Fushigi.ui.widgets
                 actor.mName = $"{actor.mPackName}{i}";
 
                 ctx.AddActor(actor);
-
-                mSelectedActor = null;
-                mSelectedLayer = null;
-
             } while ((modifier & KeyboardModifier.Shift) > 0);
+            placingActors = false;
+            mSelectedActor = null;
+            mSelectedLayer = null;
         }
 
         private async Task AddSelectedLayer()
@@ -1349,7 +1364,15 @@ namespace Fushigi.ui.widgets
 
                         ImGui.TableNextColumn();
                             //Depth editing for bg unit. All points share the same depth, so batch edit the Z point
-                            float depth = mSelectedUnitRail.Points.Count == 0 ? 0 : mSelectedUnitRail.Points[0].Position.Z;
+                            float depth = mSelectedUnitRail.Points.Count == 0 ? 
+                                mSelectedUnitRail.mCourseUnit.mModelType switch{
+                                    CourseUnit.ModelType.Solid => 0,
+                                    CourseUnit.ModelType.SemiSolid => -2,
+                                    CourseUnit.ModelType.NoCollision => -4,
+                                    CourseUnit.ModelType.Bridge => -2,
+                                    _ => 0
+                                } 
+                                : mSelectedUnitRail.Points[0].Position.Z;
 
                             ImGui.Text("Z Depth"); ImGui.TableNextColumn();
                             if (ImGui.DragFloat("##Depth", ref depth, 0.1f))
@@ -1876,7 +1899,7 @@ namespace Fushigi.ui.widgets
                     if (unit.mModelType is CourseUnit.ModelType.SemiSolid or CourseUnit.ModelType.Bridge)
                     {
                         if (ImGui.Button("Add Belt"))
-                            editContext.AddBeltRail(unit, new BGUnitRail(unit));
+                            editContext.AddBeltRail(unit, new BGUnitRail(unit) {IsClosed = false});
                         ImGui.SameLine();
                         if (ImGui.Button("Remove Belt"))
                         {

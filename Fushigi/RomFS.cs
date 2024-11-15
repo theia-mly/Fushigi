@@ -74,9 +74,12 @@ namespace Fushigi
         {
             sCourseEntries.Clear();
 
-            var path = Path.Combine(GetRoot(), "Mals", "USen.Product.100.sarc.zs");
-
-
+            var path = Path.Combine(GetRoot(), "Mals", "USen.Product.101.sarc.zs");
+            if (!File.Exists(path))
+            {
+                path = Path.Combine(GetRoot(), "Mals", "USen.Product.100.sarc.zs");
+            }
+            
             Dictionary<string, string> courseNames = [];
             Dictionary<string, string> worldNames = [];
 

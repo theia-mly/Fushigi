@@ -65,7 +65,7 @@ namespace Fushigi.ui.widgets
                     
                 }
 
-                Tooltip.Show("The game files which are stored under the romfs folder.");
+                Tooltip.Show("The game files which are stored under the romfs folder.\nIf you are using v1.0.1 of Super Mario Bros. Wonder, use a RomFS Game Path with v65536 files in it.");
 
                 if (romfsTouched && !RomFS.IsValidRoot(romfs))
                 {
