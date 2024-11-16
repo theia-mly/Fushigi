@@ -575,9 +575,10 @@ namespace Fushigi.ui.widgets
                 else
                     resource_table.Save(Path.Combine(backupFolder, "System", "Resource"));
 
-                if (backup == false)
-                    Save(backup: true, backupFolder);
+                
             }
+            if (backup == false)
+                Save(backup: true, backupFolder);
         }
 
         bool EnsureFileIsWritable(string path)
