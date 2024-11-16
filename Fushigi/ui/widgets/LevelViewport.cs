@@ -67,7 +67,6 @@ namespace Fushigi.ui.widgets
     {
         public static object?[] CopiedObjects = [];
         public static Vector3 CopiedMedianPosition;
-        public static Vector2 CopiedMedianScreenPosition;
 
         public void PreventFurtherRendering() => mIsNoMoreRendering = true;
         private bool mIsNoMoreRendering = false;
@@ -729,10 +728,9 @@ namespace Fushigi.ui.widgets
                 CopiedMedianPosition = Vector3.Zero;
                 foreach (CourseActor actor in selectedActors)
                 {
-                    CopiedMedianPosition += actor.mStartingTrans;
+                    CopiedMedianPosition += actor.mTranslation;
                 }
                 CopiedMedianPosition /= selectedActors.Length;
-                CopiedMedianScreenPosition = WorldToScreen(CopiedMedianPosition);
 
                 CopiedObjects = new CourseActor[selectedActors.Length];
                 for (int i = 0; i < CopiedObjects.Length; i++)
@@ -773,62 +771,59 @@ namespace Fushigi.ui.widgets
             mEditContext.Select(newActor);
         }
 
-        private void DoPaste(bool freshCopy)
+        private async void DoPaste(bool freshCopy)
         {
             if (CopiedObjects.Length == 0) return;
 
-            //Vector3? _pos;
+            Vector3? _pos;
             KeyboardModifier modifier;
             if (CopiedObjects is not CourseActor[] actors) return;
-            // string msg;
-            // if (actors.Length == 1)
-            //     msg = $"Placing actor {actors[0].mPackName}";
-            // else
-            //     msg = $"Placing {actors.Length} actors";
-            // msg += " -- Hold SHIFT to place multiple";
-
-            // (_pos, modifier) = await PickPosition(msg, actors[0].mLayer);
-            // if (_pos == null) return;
-            var relativePos = ScreenToWorld(CopiedMedianScreenPosition);
-            if (!ImGui.GetIO().KeyShift
-            && (relativePos.X < Camera.Target.X-Camera.Distance
-            || relativePos.X > Camera.Target.X+Camera.Distance
-            || relativePos.Y < Camera.Target.Y-Camera.Distance/Camera.AspectRatio
-            || relativePos.Y > Camera.Target.Y+Camera.Distance/Camera.AspectRatio))
+            string msg;
+            if (actors.Length == 1)
+                msg = $"Placing actor {actors[0].mPackName}";
+            else
+                msg = $"Placing {actors.Length} actors";
+            msg += " -- Hold SHIFT to place multiple";
+            
+            do
             {
-                relativePos.X = Camera.Target.X;
-                relativePos.Y = Camera.Target.Y;
-            }
-            for (var i = 0; i < actors.Length; i++)
-            {
-                var actor = actors[i];
-                CourseActor newActor;
-                if (freshCopy)
-                    newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
-                else
-                    newActor = actor.Clone(mArea);
+                
+                (_pos, modifier) = await PickPosition(msg, actors[0].mLayer);
+                    if (_pos == null) return;
 
-                if (ImGui.GetIO().KeyShift)
+                var batchAction = mEditContext.BeginBatchAction();
+                for (var i = 0; i < actors.Length; i++)
                 {
-                    newActor.mTranslation = actor.mTranslation;
-                    Camera.Target = relativePos;
-                }
-                else
-                {
-                    newActor.mTranslation = relativePos + (actor.mTranslation-CopiedMedianPosition);
-                    newActor.mTranslation.Z = actor.mTranslation.Z;
-                    var n = 0;
-                    do
-                    {
-                        n++;
-                    } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{n}"));
-                    newActor.mName = $"{actor.mPackName}"+(n == 0 ? "":n);
-                }
+                    var actor = actors[i];
+                    CourseActor newActor;
+                    if (freshCopy)
+                        newActor = new CourseActor(actor.mPackName, actor.mAreaHash, actor.mLayer);
+                    else
+                        newActor = actor.Clone(mArea);
 
-                mEditContext.AddActor(newActor);
-            }
+                    // if (ImGui.GetIO().KeyShift)
+                    // {
+                    //     newActor.mTranslation = actor.mTranslation;
+                    //     Camera.Target = (Vector3)_pos;
+                    // }
+                    // else
+                    // {
+                        newActor.mTranslation = (Vector3)_pos + (actor.mTranslation-CopiedMedianPosition);
+                        newActor.mTranslation.Z = actor.mTranslation.Z;
+                        var n = 0;
+                        do
+                        {
+                            n++;
+                        } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{n}"));
+                        newActor.mName = $"{actor.mPackName}"+(n == 0 ? "":n);
+                    //}
 
-            mEditContext.Select(actors);
+                    mEditContext.AddActor(newActor);
+                }
+                batchAction.Commit($"{IconUtil.ICON_PLUS_CIRCLE} Paste {actors.Length} Actor{(actors.Length > 1 ? "s":"")}");
+
+                mEditContext.Select(actors);
+            }while(modifier == KeyboardModifier.Shift);
 
         }
 
