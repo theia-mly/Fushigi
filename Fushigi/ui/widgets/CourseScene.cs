@@ -518,7 +518,7 @@ namespace Fushigi.ui.widgets
             var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
             if (!Directory.Exists(rstbPath))
                     Directory.CreateDirectory(rstbPath);
-            string[] sizeTables = Directory.GetFiles(rstbPath);
+            string[] sizeTables = Directory.GetFiles(rstbPath, "*.zs");
             foreach (string path in sizeTables)
             {
                 RSTB resource_table = new RSTB();
@@ -571,11 +571,9 @@ namespace Fushigi.ui.widgets
                 }
 
                 if (backup)
-                    resource_table.Save();
-                else
                     resource_table.Save(Path.Combine(backupFolder, "System", "Resource"));
-
-                
+                else
+                    resource_table.Save();
             }
             if (backup == false)
                 Save(backup: true, backupFolder);
