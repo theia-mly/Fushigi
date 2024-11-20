@@ -927,36 +927,27 @@ namespace Fushigi.ui.widgets
                 }
                 if (!mMultiSelecting && mEditContext.IsAnySelected<CourseActor>())
                 {
-                    Vector3 selectedMedianStartPos = Vector3.Zero;
-                    foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
-                    {
-                        selectedMedianStartPos += actor.mStartingTrans;
-                    }
-                    selectedMedianStartPos /= mEditContext.GetSelectedObjects<CourseActor>().Count();
-
-                    Vector3 selectedMedianPos = selectedMedianStartPos;
-
+                    var primaryActor = mEditContext.GetSelectedObjects<CourseActor>().First(actor => actor.mStartingTrans == (Vector3)selectedMedianStartPos); 
                     Vector3 posVec = ScreenToWorld(ImGui.GetMousePos());
-                    posVec -= ScreenToWorld(ImGui.GetIO().MouseClickedPos[0]) - selectedMedianStartPos;
-
+                    posVec -= ScreenToWorld(ImGui.GetIO().MouseClickedPos[0]) - primaryActor.mStartingTrans;
+                    if (!ImGui.GetIO().KeyShift)
+                    {
+                        posVec.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
+                        posVec.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                        if (!ImGui.GetIO().KeyAlt)
+                        {
+                            posVec.X += primaryActor.mStartingTrans.X - MathF.Round(primaryActor.mStartingTrans.X * 2, MidpointRounding.AwayFromZero) / 2;
+                            posVec.Y += primaryActor.mStartingTrans.Y - MathF.Round(primaryActor.mStartingTrans.Y * 2, MidpointRounding.AwayFromZero) / 2;
+                        }
+                    }
+                    primaryActor.mTranslation.X = posVec.X;
+                    primaryActor.mTranslation.Y = posVec.Y;
+                    
                     foreach (CourseActor actor in mEditContext.GetSelectedObjects<CourseActor>())
                     {
-                        if (ImGui.GetIO().KeyShift)
-                        {
-                            selectedMedianPos = posVec;
-                        }
-                        else
-                        {
-                            selectedMedianPos.X = MathF.Round(posVec.X * 2, MidpointRounding.AwayFromZero) / 2;
-                            selectedMedianPos.Y = MathF.Round(posVec.Y * 2, MidpointRounding.AwayFromZero) / 2;
-                            if (!ImGui.GetIO().KeyAlt)
-                            {
-                                selectedMedianPos.X += selectedMedianStartPos.X - MathF.Round(selectedMedianStartPos.X * 2, MidpointRounding.AwayFromZero) / 2;
-                                selectedMedianPos.Y += selectedMedianStartPos.Y - MathF.Round(selectedMedianStartPos.Y * 2, MidpointRounding.AwayFromZero) / 2;
-                            }
-                        }
-                        actor.mTranslation.X = selectedMedianPos.X + (actor.mStartingTrans.X - selectedMedianStartPos.X);
-                        actor.mTranslation.Y = selectedMedianPos.Y + (actor.mStartingTrans.Y - selectedMedianStartPos.Y);
+                        Vector3 relativePos = actor.mStartingTrans - primaryActor.mStartingTrans;
+                        actor.mTranslation.X = primaryActor.mTranslation.X + relativePos.X;
+                        actor.mTranslation.Y = primaryActor.mTranslation.Y + relativePos.Y;
                     }
                 }
                 if (!mMultiSelecting && mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? rail))
@@ -1013,6 +1004,8 @@ namespace Fushigi.ui.widgets
                     //TODO remove this once all course objects have IViewportSelectable SceneObjs
                     prevSelectVersion = mEditContext.SelectionVersion;
                     IViewportSelectable.DefaultSelect(mEditContext, mHoveredObject);
+                    if (mHoveredObject is CourseActor act)
+                        selectedMedianStartPos = act.mStartingTrans;
                 }
             }
 
