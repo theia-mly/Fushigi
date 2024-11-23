@@ -283,7 +283,7 @@ namespace Fushigi.course
             CourseActor cloned = new(mPackName, mAreaHash, mLayer)
             {
                 mPackName = mPackName,
-                mName = mName + "Copy",
+                mName = mName,
                 mLayer = mLayer,
                 mWonderView = mWonderView,
                 wonderVisible = wonderVisible,
