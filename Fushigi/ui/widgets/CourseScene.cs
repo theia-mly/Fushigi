@@ -44,6 +44,8 @@ namespace Fushigi.ui.widgets
         bool mAllLayersVisible = true;
         readonly List<IToolWindow> mOpenToolWindows = [];
 
+        static Dictionary<string, List<ulong>> mCopiedLinks = [];
+
         // this is a very bad fix bc im waiting
         // to work on jupahe's editor instead of
         // fushigi.
@@ -775,7 +777,13 @@ namespace Fushigi.ui.widgets
                 (pos, modifier) = await viewport.PickPosition(
                     $"Placing actor {mSelectedActor} -- Hold SHIFT to place multiple", mSelectedLayer);
                 if (!pos.TryGetValue(out var posVec))
+                {
+                    placingActors = false;
+                    mSelectedActor = null;
+                    mSelectedLayer = null;
                     return;
+                }
+                    
 
                 var actor = new CourseActor(mSelectedActor, area.mRootHash, mSelectedLayer);
 
@@ -1071,9 +1079,7 @@ namespace Fushigi.ui.widgets
                 ImGui.Separator();
 
 
-
-                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-                if (ImGui.BeginCombo("##Add Link", "Add Link"))
+                if (ImGui.BeginCombo("##Add Link", "Add Link", ImGuiComboFlags.WidthFitPreview))
                 {
                     for (int i = 0; i < mLinkTypes.Length; i++)
                     {
@@ -1104,111 +1110,212 @@ namespace Fushigi.ui.widgets
 
                     ImGui.EndCombo();
                 }
+                ImGui.SameLine();
+                if (ImGui.Button($"{IconUtil.ICON_COPY}"))
+                {
+                    mCopiedLinks = selectedArea.mLinkHolder.GetDestHashesFromSrc(mSelectedActor.mHash);
+                }
+                ImGui.SetItemTooltip("Copy Source Links");
+                ImGui.SameLine();
+                if (ImGui.Button($"{IconUtil.ICON_PASTE}") && mCopiedLinks.Count > 0)
+                {
+                    var total = 0;
+                    var batch = editContext.BeginBatchAction();
+                    foreach ((string linkName, List<ulong> hashArray) in mCopiedLinks)
+                    {
+                        for (int i = 0; i < hashArray.Count; i++)
+                        {
+                            var link = new CourseLink(linkName)
+                            {
+                                mSource = mSelectedActor.mHash,
+                                mDest = hashArray[i]
+                            };
+                            if (!selectedArea.mLinkHolder.mLinks.Contains(link))
+                            {
+                                editContext.AddLink(link);
+                                total++;
+                            }
+                        }
+                    }
+                    batch.Commit($"{IconUtil.ICON_PASTE} Paste {total} Link{(total == 1 ? "":"s")}");
+                }
+                ImGui.SetItemTooltip("Paste Source Links");
 
                 var destHashes = selectedArea.mLinkHolder.GetDestHashesFromSrc(mSelectedActor.mHash);
 
+                ImGui.Text("Source Links");
+                ImGui.SetItemTooltip("Links this actor is the source of");
+                ImGui.Separator();
+                ImGui.Indent();
                 foreach ((string linkName, List<ulong> hashArray) in destHashes)
                 {
                     ImGui.Text(linkName);
 
-                    if (ImGui.BeginTable("##Links", 3, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.Resizable))
+                    for (int i = 0; i < hashArray.Count; i++)
                     {
-                        ImGui.TableNextRow();
-                            ImGui.TableSetColumnIndex(0);
-                        for (int i = 0; i < hashArray.Count; i++)
+                        ImGui.PushID($"{hashArray[i].ToString()}_{i}");
+                        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetStyle().FramePadding.X);
+                        // ImGui.Text("Destination");
+                        // ImGui.TableNextColumn();
+
+                        CourseActor? destActor = selectedArea.mActorHolder[hashArray[i]];
+
+                        if (destActor != null)
                         {
-                            ImGui.PushID($"{hashArray[i].ToString()}_{i}");
-                            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetStyle().FramePadding.X);
-                            ImGui.Text("Destination");
-                            ImGui.TableNextColumn();
-
-                            CourseActor? destActor = selectedArea.mActorHolder[hashArray[i]];
-
-                            if (destActor != null)
+                            if (ImGui.Button(destActor.mName, new Vector2(ImGui.GetContentRegionAvail().X-ImGui.GetFrameHeight() * 3.2f, 0)))
                             {
-                                if (ImGui.Button(destActor.mName, new Vector2(ImGui.GetContentRegionAvail().X, 0)))
-                                {
-                                    mSelectedActor = destActor;
-                                    activeViewport.SelectedActor(destActor);
-                                    activeViewport.Camera.Target.X = destActor.mTranslation.X;
-                                    activeViewport.Camera.Target.Y = destActor.mTranslation.Y;
-                                }
+                                mSelectedActor = destActor;
+                                activeViewport.SelectedActor(destActor);
+                                activeViewport.Camera.Target.X = destActor.mTranslation.X;
+                                activeViewport.Camera.Target.Y = destActor.mTranslation.Y;
                             }
-                            else
-                            {
-                                if (ImGui.Button("Actor Not Found"))
-                                {
-
-                                }
-                            }
-
-                            ImGui.TableNextColumn();
-
-                            var cursorSP = ImGui.GetCursorScreenPos();
-                            var padding = ImGui.GetStyle().FramePadding;
-
-                            uint WithAlphaFactor(uint color, float factor) => color & 0xFFFFFF | ((uint)((color >> 24) * factor) << 24);
-
-                            float deleteButtonWidth = ImGui.GetFrameHeight() * 1.6f;
-
-                            float columnWidth = ImGui.GetContentRegionAvail().X;
-
-                            ImGui.PushClipRect(cursorSP,
-                                cursorSP + new Vector2(columnWidth - deleteButtonWidth, ImGui.GetFrameHeight()), true);
-
-                            var cursor = ImGui.GetCursorPos();
-                            ImGui.BeginDisabled();
-                            if (ImGui.Button("Replace"))
-                            {
-
-                            }
-                            ImGui.EndDisabled();
-                            cursor.X += ImGui.GetItemRectSize().X + 2;
-
-                            ImGui.SetCursorPos(cursor);
-                            if (ImGui.Button(IconUtil.ICON_EYE_DROPPER))
-                            {
-                                ImGui.SetWindowFocus(selectedArea.GetName());
-                                Task.Run(async () =>
-                                {
-                                    var (pickedDest, _) = await PickLinkDestInViewportFor(mSelectedActor);
-                                    if (pickedDest is null)
-                                        return;
-
-                                    //TODO rework GetDestHashesFromSrc to return the actual link objects or do it in another way
-                                    var link = selectedArea.mLinkHolder.mLinks.Find(
-                                        x => x.mSource == mSelectedActor.mHash &&
-                                        x.mLinkName == linkName &&
-                                        x.mDest == destActor!.mHash);
-
-                                    link.mDest = pickedDest.mHash;
-                                });
-                            }
-
-                            ImGui.PopClipRect();
-                            cursorSP.X += columnWidth - deleteButtonWidth;
-                            ImGui.SetCursorScreenPos(cursorSP);
-
-                            bool clicked = ImGui.InvisibleButton("##Delete Link", new Vector2(deleteButtonWidth, ImGui.GetFrameHeight()));
-                            string deleteIcon = IconUtil.ICON_TRASH_ALT;
-                            ImGui.GetWindowDrawList().AddText(cursorSP + new Vector2((deleteButtonWidth - ImGui.CalcTextSize(deleteIcon).X) / 2, padding.Y),
-                                WithAlphaFactor(ImGui.GetColorU32(ImGuiCol.Text), ImGui.IsItemHovered() ? 1 : 0.5f),
-                                deleteIcon);
-
-                            if (ImGui.IsItemHovered())
-                                ImGui.SetTooltip("Delete Link");
-
-                            if (clicked)
-                                editContext.DeleteLink(linkName, mSelectedActor.mHash, hashArray[i]);
-
-                            ImGui.PopID();
-                            ImGui.TableNextColumn();
+                            ImGui.SetItemTooltip($"{destActor.mPackName}\n{destActor.mName}");
                         }
-                        ImGui.EndTable();
+                        else
+                        {
+                            if (ImGui.Button("Actor Not Found"))
+                            {
+
+                            }
+                        }
+
+                        ImGui.SameLine();
+
+                        var cursorSP = ImGui.GetCursorScreenPos();
+                        var padding = ImGui.GetStyle().FramePadding;
+
+                        uint WithAlphaFactor(uint color, float factor) => color & 0xFFFFFF | ((uint)((color >> 24) * factor) << 24);
+
+                        float deleteButtonWidth = ImGui.GetFrameHeight() * 1.6f;
+
+                        float columnWidth = ImGui.GetContentRegionAvail().X;
+
+                        ImGui.PushClipRect(cursorSP,
+                            cursorSP + new Vector2(columnWidth - deleteButtonWidth, ImGui.GetFrameHeight()), true);
+
+                        //var cursor = ImGui.GetCursorPos();
+                        // ImGui.BeginDisabled();
+                        // if (ImGui.Button("Replace"))
+                        // {
+
+                        // }
+                        // ImGui.EndDisabled();
+                        // cursor.X += ImGui.GetItemRectSize().X + 2;
+
+                        //ImGui.SetCursorPos(cursor);
+                        if (ImGui.Button(IconUtil.ICON_EYE_DROPPER))
+                        {
+                            ImGui.SetWindowFocus(selectedArea.GetName());
+                            Task.Run(async () =>
+                            {
+                                var (pickedDest, _) = await PickLinkDestInViewportFor(mSelectedActor);
+                                if (pickedDest is null)
+                                    return;
+
+                                //TODO rework GetDestHashesFromSrc to return the actual link objects or do it in another way
+                                var link = selectedArea.mLinkHolder.mLinks.Find(
+                                    x => x.mSource == mSelectedActor.mHash &&
+                                    x.mLinkName == linkName &&
+                                    x.mDest == destActor!.mHash);
+
+                                link.mDest = pickedDest.mHash;
+                            });
+                        }
+                        ImGui.SetItemTooltip("Replace");
+
+                        ImGui.PopClipRect();
+                        cursorSP.X += columnWidth - deleteButtonWidth;
+                        ImGui.SetCursorScreenPos(cursorSP);
+
+                        ImGui.SameLine();
+
+                        bool clicked = ImGui.InvisibleButton("##Delete Link", new Vector2(deleteButtonWidth, ImGui.GetFrameHeight()));
+                        string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                        ImGui.GetWindowDrawList().AddText(cursorSP + new Vector2((deleteButtonWidth - ImGui.CalcTextSize(deleteIcon).X) / 2, padding.Y),
+                            WithAlphaFactor(ImGui.GetColorU32(ImGuiCol.Text), ImGui.IsItemHovered() ? 1 : 0.5f),
+                            deleteIcon);
+
+                        ImGui.SetItemTooltip("Delete Link");
+
+                        if (clicked)
+                            editContext.DeleteLink(linkName, mSelectedActor.mHash, hashArray[i]);
+
+                        ImGui.PopID();
                     }
 
                     ImGui.Separator();
                 }
+                ImGui.Unindent();
+
+                var sourceHashes = selectedArea.mLinkHolder.GetSrcHashesFromDest(mSelectedActor.mHash);
+
+                ImGui.Text("Destination Links");
+                ImGui.SetItemTooltip("Links this actor is the destination of");
+                ImGui.Separator();
+                ImGui.Indent();
+                foreach ((string linkName, List<ulong> hashArray) in sourceHashes)
+                {
+                    ImGui.Text(linkName);
+                    for (int i = 0; i < hashArray.Count; i++)
+                    {
+                        ImGui.PushID($"{hashArray[i].ToString()}_{i}");
+                        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetStyle().FramePadding.X);
+                        // ImGui.Text("Destination");
+                        // ImGui.TableNextColumn();
+
+                        CourseActor? srcActor = selectedArea.mActorHolder[hashArray[i]];
+
+                        if (srcActor != null)
+                        {
+                            if (ImGui.Button(srcActor.mName, new Vector2(ImGui.GetContentRegionAvail().X-ImGui.GetFrameHeight() * 1.6f, 0)))
+                            {
+                                mSelectedActor = srcActor;
+                                activeViewport.SelectedActor(srcActor);
+                                activeViewport.Camera.Target.X = srcActor.mTranslation.X;
+                                activeViewport.Camera.Target.Y = srcActor.mTranslation.Y;
+                            }
+                            ImGui.SetItemTooltip($"{srcActor.mPackName}\n{srcActor.mName}");
+                        }
+                        else
+                        {
+                            if (ImGui.Button("Actor Not Found"))
+                            {
+
+                            }
+                        }
+                        ImGui.SameLine();
+
+                        var cursorSP = ImGui.GetCursorScreenPos();
+                        var padding = ImGui.GetStyle().FramePadding;
+
+                        uint WithAlphaFactor(uint color, float factor) => color & 0xFFFFFF | ((uint)((color >> 24) * factor) << 24);
+
+                        float deleteButtonWidth = ImGui.GetFrameHeight() * 1.6f;
+
+                        float columnWidth = ImGui.GetContentRegionAvail().X;
+
+                        ImGui.PushClipRect(cursorSP,
+                            cursorSP + new Vector2(columnWidth - deleteButtonWidth, ImGui.GetFrameHeight()), true);
+
+                        ImGui.PopClipRect();
+                        cursorSP.X += columnWidth - deleteButtonWidth;
+                        ImGui.SetCursorScreenPos(cursorSP);
+
+                        bool clicked = ImGui.InvisibleButton("##Delete Link", new Vector2(deleteButtonWidth, ImGui.GetFrameHeight()));
+                        string deleteIcon = IconUtil.ICON_TRASH_ALT;
+                        ImGui.GetWindowDrawList().AddText(cursorSP + new Vector2((deleteButtonWidth - ImGui.CalcTextSize(deleteIcon).X) / 2, padding.Y),
+                            WithAlphaFactor(ImGui.GetColorU32(ImGuiCol.Text), ImGui.IsItemHovered() ? 1 : 0.5f),
+                            deleteIcon);
+
+                        ImGui.SetItemTooltip("Delete Link");
+
+                        if (clicked)
+                            editContext.DeleteLink(linkName, hashArray[i], mSelectedActor.mHash);
+
+                        ImGui.PopID();
+                    }
+                }
+                ImGui.Unindent();
                 #endregion
 
                 bool needsRecapture = false;
