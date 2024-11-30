@@ -136,32 +136,32 @@ namespace Fushigi.ui.widgets
         }
 
         public Task<(object? picked, KeyboardModifier modifiers)> PickObject(string tooltipMessage,
-            Predicate<object?> predicate)
+            Predicate<object?> predicate, CancellationTokenSource tokenSource)
         {
-            CancelOngoingPickingRequests();
+            CancelOngoingPickingRequests(tokenSource);
             var promise = new TaskCompletionSource<(object? picked, KeyboardModifier modifiers)>();
             mObjectPickingRequest = (tooltipMessage, predicate, promise);
             return promise.Task;
         }
 
-        public Task<(Vector3? picked, KeyboardModifier modifiers)> PickPosition(string tooltipMessage, string layer)
+        public Task<(Vector3? picked, KeyboardModifier modifiers)> PickPosition(string tooltipMessage, string layer, CancellationTokenSource tokenSource)
         {
-            CancelOngoingPickingRequests();
+            CancelOngoingPickingRequests(tokenSource);
             var promise = new TaskCompletionSource<(Vector3? picked, KeyboardModifier modifiers)>();
             mPositionPickingRequest = (tooltipMessage, layer, promise);
             return promise.Task;
         }
 
-        private void CancelOngoingPickingRequests()
+        private void CancelOngoingPickingRequests(CancellationTokenSource tokenSource)
         {
             if (mObjectPickingRequest.TryGetValue(out var objectPickingRequest))
             {
-                objectPickingRequest.promise.SetCanceled();
+                tokenSource.Cancel();
                 mObjectPickingRequest = null;
             }
             if (mPositionPickingRequest.TryGetValue(out var positionPickingRequest))
             {
-                positionPickingRequest.promise.SetCanceled();
+                tokenSource.Cancel();
                 mPositionPickingRequest = null;
             }
         }
@@ -784,11 +784,11 @@ namespace Fushigi.ui.widgets
             else
                 msg = $"Placing {actors.Length} actors";
             msg += " -- Hold SHIFT to place multiple";
-            
+            // Cancellation token source for cancellation. Make sure to dispose after use (which is done here through the using expression).
+            using var tokenSource = new CancellationTokenSource();
             do
             {
-                
-                (_pos, modifier) = await PickPosition(msg, actors[0].mLayer);
+                (_pos, modifier) = await PickPosition(msg, actors[0].mLayer, tokenSource);
                     if (_pos == null) return;
 
                 var batchAction = mEditContext.BeginBatchAction();

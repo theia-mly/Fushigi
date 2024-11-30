@@ -631,7 +631,6 @@ namespace Fushigi.ui.widgets
 
         private string? mSelectedActor;
         private string? mSelectedLayer;
-        private bool placingActors;
         private string mAddActorSearchQuery = "";
         private string mAddLayerSearchQuery = "";
 
@@ -700,6 +699,7 @@ namespace Fushigi.ui.widgets
 
                 ImGui.EndTabItem();
             }
+
             if (ImGui.BeginTabItem("Add Layer"))
             {
                 if (mSelectedLayer == null)
@@ -747,10 +747,12 @@ namespace Fushigi.ui.widgets
                         ImGui.EndListBox();
                     }
                 }
-                else
+                else if (mSelectedActor == null)
                 {
                     AddSelectedLayer();
                 }
+                else
+                    AddSelectedActorWithLayer();
 
                 ImGui.EndTabItem();
             }
@@ -766,22 +768,17 @@ namespace Fushigi.ui.widgets
             var area = selectedArea;
             var ctx = areaScenes[selectedArea].EditContext;
 
-            if (placingActors) return;
-
-            placingActors = true;
             Vector3? pos;
             KeyboardModifier modifier;
+            using var tokenSource = new CancellationTokenSource();
             do
             {
                 ImGui.SetWindowFocus(area.mAreaName);
                 (pos, modifier) = await viewport.PickPosition(
-                    $"Placing actor {mSelectedActor} -- Hold SHIFT to place multiple", mSelectedLayer);
+                    $"Placing actor {mSelectedActor} -- Hold SHIFT to place multiple", mSelectedLayer, tokenSource);
                 if (!pos.TryGetValue(out var posVec))
                 {
-                    placingActors = false;
-                    mSelectedActor = null;
-                    mSelectedLayer = null;
-                    return;
+                    break;
                 }
                     
 
@@ -800,7 +797,6 @@ namespace Fushigi.ui.widgets
 
                 ctx.AddActor(actor);
             } while ((modifier & KeyboardModifier.Shift) > 0);
-            placingActors = false;
             mSelectedActor = null;
             mSelectedLayer = null;
         }
@@ -2837,9 +2833,10 @@ namespace Fushigi.ui.widgets
 
         private async Task<(CourseActor?, KeyboardModifier modifiers)> PickLinkDestInViewportFor(CourseActor source)
         {
+            using var tokenSource = new CancellationTokenSource();
             var (picked, modifier) = await activeViewport.PickObject(
                             "Select the destination actor you wish to link to. -- Hold SHIFT to link multiple",
-                            x => x is CourseActor && x != source);
+                            x => x is CourseActor && x != source, tokenSource);
             return (picked as CourseActor, modifier);
         }
 
