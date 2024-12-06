@@ -12,7 +12,7 @@ namespace Fushigi.gl.Bfres
         {
             if (!Cache.ContainsKey(projectName))
             {
-                var path = FileUtil.FindContentPath(Path.Combine("Model", projectName + ".bfres.zs"));
+                var path = Path.Combine(UserSettings.GetRomFSPath(), "Model", projectName + ".bfres.zs");
                 if (File.Exists(path))
                 {
                     Cache.Add(projectName, Task.FromResult<BfresRender?>(
@@ -29,7 +29,7 @@ namespace Fushigi.gl.Bfres
         {
             if (!Cache.ContainsKey(projectName))
             {
-                var path = FileUtil.FindContentPath(Path.Combine("Model", projectName + ".bfres.zs"));
+                var path = Path.Combine(UserSettings.GetRomFSPath(), "Model", projectName + ".bfres.zs");
                 if (File.Exists(path))
                     Cache.Add(projectName, LoadInternal(glScheduler, path));
                 else //use null renderer to not check the file again (todo this function should only load during course load)
