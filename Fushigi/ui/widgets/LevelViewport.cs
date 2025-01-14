@@ -1066,7 +1066,7 @@ namespace Fushigi.ui.widgets
                 dragRelease = false;
             }
 
-            if (ImGui.IsKeyPressed(ImGuiKey.Delete) || ImGui.IsKeyPressed(ImGuiKey.Backspace))
+            if (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace)))
                 ObjectDeletionRequested?.Invoke(mEditContext.GetSelectedObjects<CourseActor>().ToList());
 
             if (mEditContext.IsSingleObjectSelected(out CourseRail.CourseRailPoint? point) &&
@@ -1220,7 +1220,7 @@ namespace Fushigi.ui.widgets
                     }
 
                     //Delete selected
-                    if (selectedPoint != null && (ImGui.IsKeyPressed(ImGuiKey.Delete) || ImGui.IsKeyPressed(ImGuiKey.Backspace)))
+                    if (selectedPoint != null && (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace))))
                     {
                         mEditContext.DeleteRailPoint(rail, selectedPoint);
                     }
@@ -1373,10 +1373,16 @@ namespace Fushigi.ui.widgets
 
                     if (calc != null)
                     {
+                        center = calc.mCenter;
                         min = calc.mMin;
                         max = calc.mMax;
-                        center = calc.mCenter;
                     }
+                    if (min.X == max.X)
+                        min.X *= -1;
+                    if (min.Y == max.Y)
+                        min.Y *= -1;
+                    if (min.Z == max.Z)
+                        min.Z *= -1;
                 }
 
                 string layer = actor.mLayer;

@@ -102,7 +102,7 @@ namespace Fushigi.ui.SceneObjects.bgunit
         public void OnKeyDown(CourseAreaEditContext ctx, LevelViewport viewport)
         {
             //TODO move the delete logic over to CourseAreaEditContext and remove this
-            if (ImGui.IsKeyPressed(ImGuiKey.Delete) || ImGui.IsKeyPressed(ImGuiKey.Backspace))
+            if (ImGui.IsKeyPressed(ImGuiKey.Delete) || (ImGui.GetIO().KeyShift && ImGui.IsKeyPressed(ImGuiKey.Backspace)))
                 RemoveSelected(ctx, viewport);
             if (IsSelected(ctx) && ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.A))
                 SelectAll(ctx);
