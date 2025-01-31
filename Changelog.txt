@@ -1,0 +1,24 @@
+Fushigi v1.5.0 Changelog
+
+Bugfixes:
+- Fixed crashing when regenerating the actor parameter database
+- Fixed the offset of the gizmo of AdditionalCullingAabbArea
+- Actually fixed the issue of zero width actors not being clickable
+- Fixed some actors not having drop down menus for choosing child actors
+
+Added Features:
+- Editing of Simultaneous Groups
+- Editing and Saving of Global Links
+- Editing and Saving of AreaParam files
+- Editing and Saving of CourseInfo files
+- Editing and Saving of MapAnalysisInfo files
+- Editing and Saving of StageLoadInfo files
+- Repositioned the actor to rail links onto the actor parameters
+- When building the parameter database, Fushigi now includes actors inside the mod folder as well
+- UI overhaul
+- Added level reload button
+- Added "Hide Background" button
+- Added a button to automatically setup a goal pole including links
+- Level selector now reads level names and thumbnails from the mod folder as well
+- A warning if .NET 8 is not installed, including a link towards the download site
+- Added the possibility to choose whether or not to render custom models from mod folders
