@@ -180,6 +180,8 @@ namespace Fushigi.rstb
                     return (uint)size + 0x180;
                 case ".genvb": //Tested from Env folder
                     return (uint)size + 0x2000;
+                case ".bgyml":
+                    return (uint)size + 0x3000;
             }
 
             //Default
