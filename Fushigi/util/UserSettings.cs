@@ -20,6 +20,7 @@ namespace Fushigi.util
             public Dictionary<string, string> ModPaths;
             public List<string> RecentCourses;
             public bool UseGameShaders;
+            public bool RenderCustomModels;
             public bool UseAstcTextureCache;
             public bool HideDeletingLinkedActorsPopup;
             public bool UseNewCamera;
@@ -31,6 +32,7 @@ namespace Fushigi.util
                 ModPaths = [];
                 RomFSModPath = "";
                 RecentCourses = new List<string>(MaxRecents);
+                RenderCustomModels = false;
                 UseGameShaders = false;
                 UseAstcTextureCache = false;
                 HideDeletingLinkedActorsPopup = false;
@@ -59,10 +61,18 @@ namespace Fushigi.util
         public static bool UseAstcTextureCache() => AppSettings.UseAstcTextureCache;
         public static bool HideDeletingLinkedActorsPopup() => AppSettings.HideDeletingLinkedActorsPopup;
 
+        public static bool RenderCustomModels() => AppSettings.RenderCustomModels;
+
         public static void SetGameShaders(bool value)
         {
             AppSettings.UseGameShaders = value;
             Save(); //save setting
+        }
+
+        public static void SetRenderCustomModels(bool value)
+        {
+            AppSettings.RenderCustomModels = value;
+            Save();
         }
 
         public static void SetAstcTextureCache(bool value)
@@ -106,6 +116,11 @@ namespace Fushigi.util
             if (AppSettings.BackupFreqMinutes == 0)
                 SetBackupFreqMinutes(10);
             return AppSettings.BackupFreqMinutes;
+        }
+
+        public static bool GetRenderCustomModels()
+        {
+            return AppSettings.RenderCustomModels;
         }
 
         public static string GetRomFSPath()

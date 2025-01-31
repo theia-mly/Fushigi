@@ -386,6 +386,22 @@ namespace Fushigi.course
             return link is not null;
         }
 
+        public List<CourseActorToRailLink?> TryGetLinksWithSrcActor(ulong hash)
+        {
+            List<CourseActorToRailLink?> list = new();
+
+            if (mLinks.Count > 0)
+            {
+                foreach (CourseActorToRailLink link in mLinks)
+                {
+                    if (link.mSourceActor == hash)
+                        list.Add(link);
+                }
+            }
+
+            return list;
+        }
+
         public bool TryGetLinkWithDestRail(ulong hash,
             [NotNullWhen(true)] out CourseActorToRailLink? link)
         {

@@ -70,7 +70,6 @@ namespace Fushigi.ui.widgets
             ImGui.Text(RomFS.GetCourseEntries()[selectedWorld!].name);
             font.FontSize = fontSize;
 
-
             if (!ImGui.BeginListBox(selectedWorld, ImGui.GetContentRegionAvail()))
             {
                 return;

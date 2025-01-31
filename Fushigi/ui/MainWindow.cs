@@ -278,7 +278,26 @@ namespace Fushigi.ui
                                 }
                             }).ConfigureAwait(false); //fire and forget
                         }
+
+                        // Reload Course
+                        if (ImGui.MenuItem("Reload Course"))
+                        {
+                            Task.Run(async () =>
+                            {
+                                if (mCurrentCourseName is null)
+                                    return;
+
+                                if (await TryCloseCourse())
+                                {
+                                    Logger.Logger.LogMessage("MainWindow", $"Reload course {mCurrentCourseName}!");
+                                    await LoadCourseWithProgressBar(mCurrentCourseName);
+                                    UserSettings.AppendRecentCourse(mCurrentCourseName);
+                                }
+                            }).ConfigureAwait(false); //fire and forget
+                        }
                     }
+
+                    ImGui.Separator();
 
                     /* Saves the currently loaded course */
 
@@ -313,6 +332,9 @@ namespace Fushigi.ui
                             mSelectedCourseScene.Save();
                         }
                     }
+
+                    ImGui.Separator();
+
                     if (ImGui.MenuItem("Blank out baked collision [EXPERIMENTAL]") && mSelectedCourseScene != null)
                     {
                         string directory = Path.Combine(UserSettings.GetModRomFSPath(), "Phive", "StaticCompoundBody");
@@ -330,6 +352,8 @@ namespace Fushigi.ui
 
                     ImGui.PopStyleColor();
 
+                    ImGui.Separator();
+
                     /* a ImGUI menu item that just closes the application */
                     if (ImGui.MenuItem("Close"))
                         mWindow.Close();
@@ -340,17 +364,27 @@ namespace Fushigi.ui
 
                 if (ImGui.BeginMenu("Edit"))
                 {
-                    if (ImGui.MenuItem("Preferences"))
-                        mIsShowPreferenceWindow = true;
-
-                    if (ImGui.MenuItem("Regenerate Parameter Database", ParamDB.sIsInit))
-                        _ = LoadParamDBWithProgressBar(this);
 
                     if (ImGui.MenuItem("Undo"))
                         mSelectedCourseScene?.Undo();
 
                     if (ImGui.MenuItem("Redo"))
                         mSelectedCourseScene?.Redo();
+
+                    ImGui.Separator();
+
+                    if (ImGui.MenuItem("Place Goal Setup"))
+                        mSelectedCourseScene?.PlaceGoalSetup();
+
+                    ImGui.Separator();
+
+                    if (ImGui.MenuItem("Regenerate Parameter Database", ParamDB.sIsInit))
+                    {
+                        _ = LoadParamDBWithProgressBar(this);
+                    }
+
+                    if (ImGui.MenuItem("Preferences"))
+                        mIsShowPreferenceWindow = true;
 
                     /* end Edit menu */
                     ImGui.EndMenu();

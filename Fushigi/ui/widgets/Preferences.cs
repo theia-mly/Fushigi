@@ -16,11 +16,12 @@ namespace Fushigi.ui.widgets
         public static void Draw(ref bool continueDisplay, GLTaskScheduler glTaskScheduler,
             IPopupModalHost modalHost)
         {
-            ImGui.SetNextWindowSize(new Vector2(700, 250), ImGuiCond.Once);
+            ImGui.SetNextWindowSize(new Vector2(700, 300), ImGuiCond.Once);
             if (ImGui.Begin("Preferences", ImGuiWindowFlags.NoDocking))
             {
                 var romfs = UserSettings.GetRomFSPath();
                 var mod = UserSettings.GetModRomFSPath();
+                var renderCustomModels = UserSettings.GetRenderCustomModels();
                 var useGameShaders = UserSettings.UseGameShaders();
                 var useAstcTextureCache = UserSettings.UseAstcTextureCache();
                 var hideDeletingLinkedActorsPopup = UserSettings.HideDeletingLinkedActorsPopup();
@@ -28,7 +29,6 @@ namespace Fushigi.ui.widgets
                 var backupFreqMinutes = UserSettings.GetBackupFreqMinutes();
 
                 ImGui.Indent();
-
 
                 if (PathSelector.Show(
                     "RomFS Game Path",
@@ -94,6 +94,13 @@ namespace Fushigi.ui.widgets
                 }
 
                 Tooltip.Show("Displays models using the shaders present in the game. This may cause a performance drop but will look more visually accurate.");
+
+                if (ImGui.Checkbox("Render Models from mod RomFS", ref renderCustomModels))
+                {
+                    UserSettings.SetRenderCustomModels(renderCustomModels);
+                }
+
+                Tooltip.Show("Uses the models from the mod directory. WARNING: Rendering of custom models using game shaders is broken.");
 
                 if (ImGui.Checkbox("Use Astc Texture Cache", ref useAstcTextureCache))
                 {

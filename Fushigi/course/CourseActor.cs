@@ -48,6 +48,7 @@ namespace Fushigi.course
             mHash = BymlUtil.GetNodeData<ulong>(actorNode["Hash"]);
             mName = BymlUtil.GetNodeData<string>(actorNode["Name"]);
             mActorPack = ActorPackCache.Load(mPackName);
+            mActorChildRef = mActorPack.ChildActorParamName;
 
 
             if (actorNode.ContainsKey("Dynamic"))
@@ -134,6 +135,7 @@ namespace Fushigi.course
             mScale = new System.Numerics.Vector3(1.0f);
             mHash = RandomUtil.GetRandom();
             mActorPack = ActorPackCache.Load(mPackName);
+            mActorChildRef = mActorPack.ChildActorParamName;
 
             InitializeDefaultDynamicParams();
         }
@@ -318,6 +320,8 @@ namespace Fushigi.course
         public PropertyDict mSystemParameters = PropertyDict.Empty;
 
         public ActorPack mActorPack;
+
+        public string mActorChildRef;
 
         public static readonly Dictionary<CourseActorType, uint> CourseActorColors = new()
         {

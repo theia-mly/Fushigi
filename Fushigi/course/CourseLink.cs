@@ -11,6 +11,12 @@ namespace Fushigi.course
             mDest = 0;
             mLinkName = linkName;
         }
+        public CourseLink(string linkName, ulong sourceHash, ulong destHash)
+        {
+            mSource = sourceHash;
+            mDest = destHash;
+            mLinkName = linkName;
+        }
 
         public CourseLink(BymlHashTable table)
         {

@@ -12,7 +12,13 @@ namespace Fushigi.gl.Bfres
         {
             if (!Cache.ContainsKey(projectName))
             {
-                var path = Path.Combine(UserSettings.GetRomFSPath(), "Model", projectName + ".bfres.zs");
+                var path = Path.Combine(UserSettings.GetRenderCustomModels() ? UserSettings.GetModRomFSPath() : UserSettings.GetRomFSPath(), "Model", projectName + ".bfres.zs");
+
+                if (!File.Exists(path))
+                {
+                    path = Path.Combine(UserSettings.GetRomFSPath(), "Model", projectName + ".bfres.zs");
+                }
+
                 if (File.Exists(path))
                 {
                     Cache.Add(projectName, Task.FromResult<BfresRender?>(

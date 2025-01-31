@@ -74,10 +74,21 @@ namespace Fushigi
         {
             sCourseEntries.Clear();
 
-            var path = Path.Combine(GetRoot(), "Mals", "USen.Product.101.sarc.zs");
+            var path = Path.Combine(UserSettings.GetModRomFSPath(), "Mals", "USen.Product.101.sarc.zs");
+
             if (!File.Exists(path))
             {
-                path = Path.Combine(GetRoot(), "Mals", "USen.Product.100.sarc.zs");
+                path = Path.Combine(UserSettings.GetModRomFSPath(), "Mals", "USen.Product.100.sarc.zs");
+
+                if (!File.Exists(path))
+                {
+                    path = Path.Combine(GetRoot(), "Mals", "USen.Product.101.sarc.zs");
+                    if (!File.Exists(path))
+                    {
+                        path = Path.Combine(GetRoot(), "Mals", "USen.Product.100.sarc.zs");
+                        Console.WriteLine("Here");
+                    }
+                }
             }
             
             Dictionary<string, string> courseNames = [];
@@ -155,6 +166,7 @@ namespace Fushigi
         public static void CacheCourseThumbnails(GL gl, string world)
         {
             var thumbnailFolder = Path.Combine(GetRoot(), "UI", "Tex", "Thumbnail");
+            var modThumbnailFolder = Path.Combine(UserSettings.GetModRomFSPath(), "UI", "Tex", "Thumbnail");
 
             foreach (var course in sCourseEntries[world].courseEntries!.Keys)
             {
@@ -162,11 +174,14 @@ namespace Fushigi
                 if (sCourseEntries[world].courseEntries![course].thumbnail != null)
                     continue;
 
-                var path = Path.Combine(thumbnailFolder, $"{course}.bntx.zs");
+                var path = Path.Combine(modThumbnailFolder, $"{course}.bntx.zs");
 
                 if (!File.Exists(path))
                 {
-                    path = Path.Combine(thumbnailFolder, "Default.bntx.zs");
+                    path = Path.Combine(thumbnailFolder, $"{course}.bntx.zs");
+
+                    if (!File.Exists(path))
+                        path = Path.Combine(thumbnailFolder, "Default.bntx.zs");
                 }
 
                 byte[] fileBytes = FileUtil.DecompressFile(path);

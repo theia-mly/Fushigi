@@ -43,6 +43,7 @@ namespace Fushigi
         public ControllerSetParam ControllerPath;
         public ShapeParamList ShapeParams;
         public BgUnitInfo BgUnitInfo;
+        public string ChildActorParamName;
 
         public string Category = "";
 
@@ -128,9 +129,17 @@ namespace Fushigi
                 string filePath = GetPathGyml((string)component.Value);
                 var data = sarc.OpenFile(filePath);
 
+                // Get the name of the ChildActorParamFile
+                if(component.Key == "ChildActorRef")
+                {
+                    // Should look like "Work/ChildActorParam/[...].game__actor__component__ChildActorParam.gyml"
+                    this.ChildActorParamName = (((string)component.Value).Split("m/")[1]).Split(".game")[0];
+                }
+
                 //Check if the component is present in the pack file.
                 if (data == null)
                     continue;
+
 
                 switch (component.Key)
                 {
@@ -162,7 +171,7 @@ namespace Fushigi
                         }
                     break;
                     case "ModelInfoRef":
-                        if(this.ModelInfoRef == null)
+                        if (this.ModelInfoRef == null)
                             this.ModelInfoRef = BymlSerialize.Deserialize<ModelInfo>(data);
                         else{
                             var par = BymlSerialize.Deserialize<ModelInfo>(data);

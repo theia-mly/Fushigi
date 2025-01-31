@@ -5,6 +5,7 @@ using Fushigi.ui.undo;
 using Fushigi.util;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using static Fushigi.course.CourseActorToRailLinksHolder;
 
@@ -268,6 +269,20 @@ namespace Fushigi.ui
             LogDeleting<BGUnitRail>();
             CommitAction(unit.mBeltRails.RevertableRemove(rail,
                     $"{IconUtil.ICON_TRASH} Delete Belt"));
+        }
+
+        public void AddGroup(CourseGroup group)
+        {
+            LogAdding<CourseGroup>();
+            CommitAction(area.mGroupsHolder.mGroups
+                .RevertableAdd(group, $"{IconUtil.ICON_PLUS_CIRCLE} Add Simultaneous Group"));
+        }
+
+        public void DeleteGroup(CourseGroup group)
+        {
+            LogAdding<CourseGroup>();
+            CommitAction(area.mGroupsHolder.mGroups
+                .RevertableRemove(group, $"{IconUtil.ICON_TRASH} Delete Simultaneous Group"));
         }
 
         private void LogAdding<T>(ulong hash) => 

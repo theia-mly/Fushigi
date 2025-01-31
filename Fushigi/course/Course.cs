@@ -10,6 +10,9 @@ namespace Fushigi.course
         public Course(string courseName)
         {
             mCourseName = courseName;
+            mCourseInfo = new CourseInfo(courseName);
+            mMapAnalysisInfo = new MapAnalysisInfo(courseName);
+            mStageLoadInfo = new StageLoadInfo(courseName);
             mAreas = [];
             LoadFromRomFS();
         }
@@ -36,11 +39,11 @@ namespace Fushigi.course
             }
             else
             {
-                var stageList = (BymlArrayNode)root["RefStages"];
+                mStageReferences = (BymlArrayNode)root["RefStages"];
 
-                for (int i = 0; i < stageList.Length; i++)
+                for (int i = 0; i < mStageReferences.Length; i++)
                 {
-                    string stageParamPath = ((BymlNode<string>)stageList[i]).Data.Replace("Work/", "").Replace(".gyml", ".bgyml");
+                    string stageParamPath = ((BymlNode<string>)mStageReferences[i]).Data.Replace("Work/", "").Replace(".gyml", ".bgyml");
                     string stageName = Path.GetFileName(stageParamPath).Split(".game")[0];
                     mAreas.Add(new CourseArea(stageName));
                 }
@@ -144,6 +147,34 @@ namespace Fushigi.course
             }
         }
 
+        //Added for saving the Course file for global links
+        public void SaveGlobalLinks(RSTB resource_table, string folder)
+        {
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            BymlHashTable root = new();
+            
+            root.AddNode(BymlNodeId.Array, mGlobalLinks.SerializeToArray(), "Links");
+
+            if(mStageReferences != null)
+            root.AddNode(BymlNodeId.Array, mStageReferences, "RefStages");
+
+            var byml = new Byml.Byml(root);
+            var mem = new MemoryStream();
+            byml.Save(mem);
+
+            var decomp_size = (uint)mem.Length;
+
+            //Compress and save the course          
+            string levelPath = Path.Combine(folder, $"{mCourseName}.bcett.byml.zs");
+            File.WriteAllBytes(levelPath, FileUtil.CompressData(mem.ToArray()));
+
+            //Update resource table
+            // filePath is a key not an actual path so we cannot use Path.Combine
+            resource_table.SetResource($"BancMapUnit/{mCourseName}.bcett.byml", decomp_size);
+        }
+
         public void SaveAreas(RSTB resTable)
         {
             //Save each course area to current romfs folder
@@ -157,6 +188,10 @@ namespace Fushigi.course
 
         readonly string mCourseName;
         readonly List<CourseArea> mAreas;
+        BymlArrayNode mStageReferences;
         CourseLinkHolder? mGlobalLinks;
+        public CourseInfo mCourseInfo;
+        public MapAnalysisInfo mMapAnalysisInfo;
+        public StageLoadInfo mStageLoadInfo;
     }
 }

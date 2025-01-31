@@ -12,6 +12,11 @@ namespace Fushigi.course
 {
     public class CourseGroup
     {
+        public CourseGroup()
+        {
+            mHash = RandomUtil.GetRandom();
+        }
+
         public CourseGroup(BymlHashTable table)
         {
             mHash = BymlUtil.GetNodeData<ulong>(table["Hash"]);

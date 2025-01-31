@@ -15,6 +15,7 @@ using Silk.NET.Core;
 using Silk.NET.Core.Native;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.IO;
 
 namespace Fushigi.param
 {
@@ -133,6 +134,7 @@ namespace Fushigi.param
 
         public static void Load(IProgress<(string operationName, float? progress)> progress)
         {
+            isReloading = true;
             /* if we have already been initialized, we skip this process */
             if (sIsInit)
             {
@@ -141,14 +143,17 @@ namespace Fushigi.param
 
             progress.Report(("Gathering Actor packs", null));
             /* the files in /Pack/Actor in the RomFS contain the PACK files that contain our parameters */
-            string[] files = RomFS.GetFiles(Path.Combine("Pack", "Actor"));
+            // Use the mod romfs as well. Useful for custom actors
+            string[] files_source_rom = RomFS.GetFiles(Path.Combine("Pack", "Actor"));
+            string[] files_mod_rom = Directory.GetFiles(Path.Combine(UserSettings.GetModRomFSPath(), Path.Combine("Pack", "Actor")));
+            string[] files = files_mod_rom.Concat(files_source_rom).ToArray();
 
 
             /* iterate through each file */
             for (int i = 0; i < files.Length; i++)
             {
                 string file = files[i];
-
+                
                 progress.Report(("Loading Parameters from Actor packs", i / (float)files.Length));
 
                 /* the actor name in question is at the beginning of the file name */
@@ -161,7 +166,8 @@ namespace Fushigi.param
                 try {
                     fileBytes = FileUtil.DecompressFile(file);
                 }
-                catch (Exception) {
+                catch (Exception)
+                {
                     continue;
                 }
 
@@ -179,7 +185,7 @@ namespace Fushigi.param
                 /* grab every file in this directory, should be all BYMLs */
                 string[] filesInDir = sarc.GetFiles(actorParamDir);
 
-                foreach(string paramFile in filesInDir)
+                foreach (string paramFile in filesInDir)
                 {
                     /* grab our parameter file name, while wiping away the rest of the junk we don't care about */
                     string paramFileName = Path.GetFileNameWithoutExtension(paramFile).Split(".engine")[0];
@@ -199,8 +205,18 @@ namespace Fushigi.param
                     sComponents.Add(paramFileName, component);
                 }
 
-                sActors.Add(actorName, param);
+                try
+                {
+                    sActors.Add(actorName, param);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("{0} - {1}: {2}", actorName, e.GetType().Name, e.Message);
+                    continue;
+                }
+
             }
+
 
             /*  now let's read our rail parameter files */
             string[] railComponentFiles = RomFS.GetFiles(Path.Combine("Component", "Blackboard", "BlackboardParamTable"));
@@ -258,6 +274,7 @@ namespace Fushigi.param
             File.WriteAllLines("railParams.json", railParamOutput.ToArray());
             /* we are all now initialized and ready to go! */
             sIsInit = true;
+            isReloading = false;
         }
 
         public static void Reload(IProgress<(string operationName, float? progress)> progress)
@@ -407,5 +424,6 @@ namespace Fushigi.param
         static Dictionary<string, Component>? sRails = new Dictionary<string, Component>();
         static Dictionary<string, ParamList>? sRailParamList = new Dictionary<string, ParamList>();
         public static bool sIsInit = false;
+        public static bool isReloading = false;
     }
 }

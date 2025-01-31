@@ -87,6 +87,7 @@ namespace Fushigi.ui.widgets
         public WonderViewType WonderViewMode = WonderViewType.Normal;
         public bool PlayAnimations = false;
         public bool ShowGrid = true;
+        public bool ShowBackground = true;
 
         Vector2 mSize = Vector2.Zero;
 
@@ -1377,12 +1378,47 @@ namespace Fushigi.ui.widgets
                         min = calc.mMin;
                         max = calc.mMax;
                     }
+
+                    // Fix this so that always min < max to avoid negative length sides
                     if (min.X == max.X)
-                        min.X *= -1;
+                    {
+                        if (min.X == 0)
+                        {
+                            min.X = -0.5f;
+                            max.X = 0.5f;
+                        }
+                        else
+                        {
+                            min.X = - Math.Abs(min.X);
+                            max.X = Math.Abs(max.X);
+                        }
+                    }
                     if (min.Y == max.Y)
-                        min.Y *= -1;
+                    {
+                        if (min.Y == 0)
+                        {
+                            min.Y = -0.5f;
+                            max.Y = 0.5f;
+                        }
+                        else
+                        {
+                            min.Y = -Math.Abs(min.Y);
+                            max.Y = Math.Abs(max.Y);
+                        }
+                    }
                     if (min.Z == max.Z)
-                        min.Z *= -1;
+                    {
+                        if (min.Z == 0)
+                        {
+                            min.Z = -0.5f;
+                            max.Z = 0.5f;
+                        }
+                        else
+                        {
+                            min.Z = -Math.Abs(min.Z);
+                            max.Z = Math.Abs(max.Z);
+                        }
+                    }
                 }
 
                 string layer = actor.mLayer;
@@ -1404,6 +1440,10 @@ namespace Fushigi.ui.widgets
 
                     if (actor.mType == CourseActorType.Area && actor.mActorPack?.ShapeParams == null)
                         off = new(0, .5f, 0);
+
+                    // Hard code the AdditionalCullingAabbArea because I have no idea where this is determined
+                    if (actor.mPackName == "AdditionalCullingAabbArea")
+                        off = new(0);
 
                     //topLeft
                     s_actorRectPolygon[0] = WorldToScreen(Vector3.Transform(new Vector3(min.X, max.Y, 0) + off, transform));
