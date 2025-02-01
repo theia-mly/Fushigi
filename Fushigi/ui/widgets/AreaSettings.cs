@@ -472,7 +472,7 @@ namespace Fushigi.ui.widgets
                 ImGui.TableNextColumn();
 
                 // BackGroundAreaType
-                ImGui.Text("Badge Medley Equip Badge ID");
+                ImGui.Text("Background Area Type");
                 ImGui.TableNextColumn();
                 var backGroundAreaType = areaParam.BackGroundAreaType is null ? "" : areaParam.BackGroundAreaType;
                 if (ImGui.InputText("##BackGroundAreaType", ref backGroundAreaType, 1024))
