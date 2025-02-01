@@ -145,9 +145,10 @@ namespace Fushigi.param
             /* the files in /Pack/Actor in the RomFS contain the PACK files that contain our parameters */
             // Use the mod romfs as well. Useful for custom actors
             string[] files_source_rom = RomFS.GetFiles(Path.Combine("Pack", "Actor"));
-            string[] files_mod_rom = Directory.GetFiles(Path.Combine(UserSettings.GetModRomFSPath(), Path.Combine("Pack", "Actor")));
+            string[] files_mod_rom = Array.Empty<string>();
+            if (Directory.Exists(Path.Combine(UserSettings.GetModRomFSPath(), "Pack", "Actor")))
+                files_mod_rom = Directory.GetFiles(Path.Combine(UserSettings.GetModRomFSPath(), Path.Combine("Pack", "Actor")));
             string[] files = files_mod_rom.Concat(files_source_rom).ToArray();
-
 
             /* iterate through each file */
             for (int i = 0; i < files.Length; i++)
@@ -163,10 +164,11 @@ namespace Fushigi.param
 
                 /* each .pack file should be ZSTD compressed, if not, skip the file */
                 byte[] fileBytes;
-                try {
+                try
+                {
                     fileBytes = FileUtil.DecompressFile(file);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     continue;
                 }
@@ -178,8 +180,16 @@ namespace Fushigi.param
 
                 if (!sarc.DirectoryExists(actorParamDir))
                 {
-                    sActors.Add(actorName, param);
-                    continue;
+                    try
+                    {
+                        sActors.Add(actorName, param);
+                        continue;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("{0} - {1}: {2}", actorName, e.GetType().Name, e.Message);
+                        continue;
+                    }
                 }
 
                 /* grab every file in this directory, should be all BYMLs */
