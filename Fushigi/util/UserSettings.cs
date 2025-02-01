@@ -167,7 +167,7 @@ namespace Fushigi.util
         public static string? GetLatestCourse()
         {
             int size = AppSettings.RecentCourses.Count;
-            
+
             if (size == 0)
             {
                 return null;
