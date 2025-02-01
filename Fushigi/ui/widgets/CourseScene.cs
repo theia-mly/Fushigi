@@ -694,13 +694,16 @@ namespace Fushigi.ui.widgets
                     }
                 }
 
-                //Save the Course file
-                Console.WriteLine($"{(backup ? "Backing up" : "Saving")} course {course.GetName()}...");
+                //Save the Course file if it hasn't already
+                if (!course.IsOneAreaCourse)
+                {
+                    Console.WriteLine($"{(backup ? "Backing up" : "Saving")} course {course.GetName()}...");
 
-                if (backup)
-                    course.SaveGlobalLinks(resource_table, Path.Combine(backupFolder, "BancMapUnit"));
-                else
-                    course.SaveGlobalLinks(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit"));
+                    if (backup)
+                        course.SaveGlobalLinks(resource_table, Path.Combine(backupFolder, "BancMapUnit"));
+                    else
+                        course.SaveGlobalLinks(resource_table, Path.Combine(UserSettings.GetModRomFSPath(), "BancMapUnit"));
+                }
 
                 //Save the CourseInfo file
                 Console.WriteLine($"{(backup ? "Backing up" : "Saving")} course info for {course.GetName()}...");

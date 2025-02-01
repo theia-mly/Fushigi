@@ -34,7 +34,9 @@ namespace Fushigi.course
             var stageParamRoot = (BymlHashTable)stageParam.Root;
             var root = (BymlHashTable)courseInfo.Root;
 
-            if (((BymlNode<string>)stageParamRoot["Category"]).Data == "Course1Area") {
+            IsOneAreaCourse = ((BymlNode<string>)stageParamRoot["Category"]).Data == "Course1Area";
+
+            if (IsOneAreaCourse) {
                 mAreas.Add(new CourseArea(mCourseName));
             }
             else
@@ -110,6 +112,7 @@ namespace Fushigi.course
         public void Save()
         {
             var rstbPath = Path.Combine(UserSettings.GetRomFSPath(), "System", "Resource");
+
             if (!Directory.Exists(rstbPath))
                     Directory.CreateDirectory(rstbPath);
             string[] sizeTables = Directory.GetFiles(rstbPath);
@@ -193,5 +196,6 @@ namespace Fushigi.course
         public CourseInfo mCourseInfo;
         public MapAnalysisInfo mMapAnalysisInfo;
         public StageLoadInfo mStageLoadInfo;
+        public bool IsOneAreaCourse;
     }
 }
