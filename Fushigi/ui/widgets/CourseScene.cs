@@ -1067,6 +1067,13 @@ namespace Fushigi.ui.widgets
                 } while (area.GetActors().Any(x => x.mName == $"{actor.mPackName}{i}"));
                 actor.mName = $"{actor.mPackName}{i}";
 
+                // Make sure ItemWonderHole's child param is set to "Default"
+                // I don't know how else to do this, so I just hardcode it in
+                if (actor.mPackName == "ItemWonderHole")
+                {
+                    actor.mActorParameters["ChildActorSelectName"] = "Default";
+                }
+
                 ctx.AddActor(actor);
             } while ((modifier & KeyboardModifier.Shift) > 0);
             mSelectedActor = null;
@@ -3363,26 +3370,43 @@ namespace Fushigi.ui.widgets
 
                         if (param == "ChildActorSelectName" && actor.mActorChildRef != null)
                         {
-                            string id = $"##{param}";
-                            List<string> list = ChildActorParam.GetActorParams(actor.mActorChildRef);
-                            int selected = list.IndexOf(actor.mActorParameters["ChildActorSelectName"].ToString());
-                            ImGui.Text("ChildParameters");
-                            ImGui.TableNextColumn();
-                            ImGui.PushItemWidth(ImGui.GetColumnWidth() - ImGui.GetStyle().ScrollbarSize);
-
-                            if (ImGui.Combo("##Parameters", ref selected, list.ToArray(), list.Count))
+                            try
                             {
-                                actor.mActorParameters["ChildActorSelectName"] = list[selected];
+                                string id = $"##{param}";
+                                List<string> list = ChildActorParam.GetActorParams(actor.mActorChildRef);
+                                int selected = list.IndexOf(actor.mActorParameters[param].ToString());
+                                ImGui.Text("ChildParameters");
+                                ImGui.TableNextColumn();
+                                ImGui.PushItemWidth(ImGui.GetColumnWidth() - ImGui.GetStyle().ScrollbarSize);
+
+                                if (ImGui.Combo("##Parameters", ref selected, list.ToArray(), list.Count))
+                                {
+                                    actor.mActorParameters[param] = list[selected];
+                                }
+                                ImGui.PopItemWidth();
+                            } catch
+                            {
+
+                                string id = $"##{param}";
+
+                                ImGui.AlignTextToFramePadding();
+                                ImGui.Text(param);
+                                ImGui.TableNextColumn();
+
+                                ImGui.PushItemWidth(ImGui.GetColumnWidth() - ImGui.GetStyle().ScrollbarSize);
+
+                                string val_string = actor.mActorParameters[param].ToString();
+                                if (ImGui.InputText(id, ref val_string, 1024))
+                                {
+                                    actor.mActorParameters[param] = val_string;
+                                }
                             }
-                            ImGui.PopItemWidth();
                         }
                         else
                         {
                             foreach (KeyValuePair<string, ParamDB.ComponentParam> pair in ParamDB.GetComponentParams(param))
                             {
                                 string id = $"##{pair.Key}";
-
-                                //Console.WriteLine(actor.mActorChildRef);
 
                                 ImGui.AlignTextToFramePadding();
                                 ImGui.Text(pair.Key);

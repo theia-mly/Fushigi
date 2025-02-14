@@ -20,10 +20,7 @@ namespace Fushigi.gl.Bfres
                 }
 
                 if (File.Exists(path))
-                {
-                    Cache.Add(projectName, Task.FromResult<BfresRender?>(
-                        new BfresRender(gl, FileUtil.DecompressAsStream(path))));
-                }
+                    Cache.Add(projectName, Task.FromResult<BfresRender?>(new BfresRender(gl, FileUtil.DecompressAsStream(path))));
                 else //use null renderer to not check the file again (todo this function should only load during course load)
                     Cache.Add(projectName, Task.FromResult<BfresRender?>(null));
             }
@@ -35,7 +32,13 @@ namespace Fushigi.gl.Bfres
         {
             if (!Cache.ContainsKey(projectName))
             {
-                var path = Path.Combine(UserSettings.GetRomFSPath(), "Model", projectName + ".bfres.zs");
+                var path = Path.Combine(UserSettings.GetRenderCustomModels() ? UserSettings.GetModRomFSPath() : UserSettings.GetRomFSPath(), "Model", projectName + ".bfres.zs");
+
+                if (!File.Exists(path))
+                {
+                    path = Path.Combine(UserSettings.GetRomFSPath(), "Model", projectName + ".bfres.zs");
+                }
+
                 if (File.Exists(path))
                     Cache.Add(projectName, LoadInternal(glScheduler, path));
                 else //use null renderer to not check the file again (todo this function should only load during course load)

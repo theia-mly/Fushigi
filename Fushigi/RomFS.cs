@@ -86,7 +86,6 @@ namespace Fushigi
                     if (!File.Exists(path))
                     {
                         path = Path.Combine(GetRoot(), "Mals", "USen.Product.100.sarc.zs");
-                        Console.WriteLine("Here");
                     }
                 }
             }

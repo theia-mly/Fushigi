@@ -5,6 +5,7 @@ using Fushigi.param;
 using Fushigi.ui.modal;
 using Fushigi.util;
 using ImGuiNET;
+using Newtonsoft.Json.Linq;
 using Silk.NET.Input;
 using Silk.NET.SDL;
 using System;
@@ -57,6 +58,87 @@ namespace Fushigi.ui.widgets
             { "Shining Falls (Underwater?; Grassy Savanna Duplicate) (Unused)", "WaAsase" },
             { "Petal Isles (Candy Overworld?; Grassy Savanna Duplicate) (Unused)", "MushiJyoku" },
             { "Bonus? (Has No Models) (Unused)", "CommonBonus" },
+        };
+
+        private static readonly Dictionary<string, string> BgmTypes = new Dictionary<string, string>()
+        {
+            { "None", "None" },
+            { "Silent", "Silent" },
+            { "Overworld", "Course14" },
+            { "Underground", "Course02" },
+            { "Athletic", "Course04" },
+            { "Beach", "Course08" },
+            { "Underwater", "Course03" },
+            { "Shining Falls Overworld", "Course06" },
+            { "Forest", "Course12" },
+            { "Savanna", "Course01" },
+            { "Desert", "Course16" },
+            { "Snow", "Course20" },
+            { "Lava", "Course15" },
+            { "Poisonous Swamp/Ghost House", "Course05" },
+            { "Fungi Mines/Dark Forest", "Course21" },
+            { "Palace", "Course09" },
+            { "Airship", "Course19" },
+            { "Factory", "Course18" },
+            { "Ninji Disco", "Course17" },
+            { "Poplin House", "Course40" },
+            { "Wiggler Race", "Course44" },
+            { "Badge Challenge", "Course45" },
+            { "KO Arena", "Course47" },
+            { "Break Time!: Puzzle/Search Party", "Course11" },
+            { "Break Time!: Action", "Course13" },
+            { "Break Time!: SMW Bonus", "Course41" },
+            { "Break Time!: SMB Theme", "Course48" },
+            { "Break Time!: SMB3 Enemy Ambush", "Course46" },
+            { "Break Time!: Isle Delfino", "Course42" },
+            { "Break Time!: ", "Course47" },
+            { "Coin Bonus Ship", "Course43" },
+            { "AreaBGM", "AreaBGM" },
+            { "Music Track 1", "MusicTrack01" },
+            { "Music Track 2", "MusicTrack02" },
+            { "Music Track 3", "MusicTrack03" },
+            { "Music Track 4", "MusicTrack04" },
+            { "Music Track 5", "MusicTrack05" },
+            { "Wonder Flower: Course Mania", "Wonder08" },
+            { "Wonder Flower: Singing Piranha Plants", "Wonder05" },
+            { "Wonder Flower: Super Star", "Wonder18" },
+            { "Wonder Flower: Bulrush Stampede", "Wonder02" },
+            { "Wonder Flower: Spike Dance", "Wonder16" },
+            { "Wonder Flower: Strange Happenings", "Wonder07" },
+            { "Wonder Flower: Space", "Wonder24" },
+            { "Wonder Flower: Shadow Mario", "Wonder12" },
+            { "Wonder Flower: Transformation", "Wonder22" },
+            { "Wonder Flower: Jump! Jump! Jump!", "Wonder14" },
+            { "Wonder Flower: Danger", "Wonder20" },
+            { "Wonder Flower: Ninji Jump Party", "Wonder15" },
+            { "Wonder Flower: Halloween", "Wonder17" },
+            { "Wonder Flower: Quiz", "Wonder09" },
+            { "Wonder Flower: King Boo's Opera", "Wonder10" },
+            { "Wonder Flower: Wubba Transformation", "Wonder06" },
+            { "Wonder Flower: Dragons", "Wonder26" },
+            { "Wonder Flower: Metal Mario", "Wonder11" },
+            { "Wonder Flower: Knuckel Fest", "Wonder04" },
+            { "Wonder Flower: Rage Stage", "Wonder21" },
+            { "Wonder Flower: Piranha Plant Reprise", "Wonder23" },
+            { "Wonder Flower: Wonder Gauntlet", "Wonder25" },
+            { "After Wonder", "AfterWonder" },
+            { "Demo: Title", "Demo01" },
+            { "Demo: Party", "Demo02" },
+            { "Demo: Goal Pole", "Demo03" },
+            { "Demo: World Clear", "Demo04" },
+            { "Demo: Demo_ED_1 (?)", "Demo05" },
+            { "Demo: Demo_ED_2 (?)", "Demo07" },
+            { "Demo: Staff Credits", "Demo06" },
+            { "Wonder Set By Area Param", "WonderSetByAreaParam" },
+            { "World Map: Pipe-Rock Plateau", "World01" },
+            { "World Map: Petal Isles", "World02" },
+            { "World Map: Fluff-Puff Peaks", "World03" },
+            { "World Map: Shining Falls", "World04" },
+            { "World Map: Sunbaked Desert", "World05" },
+            { "World Map: Fungi Mines", "World06" },
+            { "World Map: Deep Magma Bog", "World07" },
+            { "World Map: Castle Bowser", "World08" },
+            { "World Map: Special World", "World09" },
         };
 
         public static void Draw(ref bool continueDisplay, IPopupModalHost modalHost, AreaParam areaParam)
@@ -278,8 +360,10 @@ namespace Fushigi.ui.widgets
                     ImGui.Text("Background Track");
                     ImGui.TableNextColumn();
                     var bgmType = areaParam.BgmType is null ? "" : areaParam.BgmType;
-                    if (ImGui.InputText("##BgmType", ref bgmType, 1024))
-                        areaParam.BgmType = bgmType;
+                    int index = BgmTypes.Values.ToList().IndexOf(bgmType);
+                    if (index < 0) index = 0;
+                    if (ImGui.Combo("##BgmType", ref index, BgmTypes.Keys.ToArray(), BgmTypes.Count(), 10))
+                        areaParam.BgmType = BgmTypes.Values.ToArray()[index];
 
                     ImGui.TableNextColumn();
 
@@ -319,8 +403,10 @@ namespace Fushigi.ui.widgets
                     ImGui.Text("Wonder Background Track");
                     ImGui.TableNextColumn();
                     var wonderBgmType = areaParam.WonderBgmType is null ? "" : areaParam.WonderBgmType;
-                    if (ImGui.InputText("##WonderBgmType", ref wonderBgmType, 1024))
-                        areaParam.WonderBgmType = wonderBgmType;
+                    int index = BgmTypes.Values.ToList().IndexOf(wonderBgmType);
+                    if (index < 0) index = 0;
+                    if (ImGui.Combo("##WonderBgmType", ref index, BgmTypes.Keys.ToArray(), BgmTypes.Count(), 10))
+                        areaParam.BgmType = BgmTypes.Values.ToArray()[index];
 
                     ImGui.TableNextColumn();
 

@@ -11,16 +11,20 @@ using FuzzySharp;
 
 internal class Program
 {
-    public const string Version = "v1.5.2";
+    public const string Version = "v1.5.3";
 
     public static MainWindow MainWindow { get; private set; }
 
     private static void Main(string[] args)
     {
-        try
+        if (TestForNET8())
         {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(".NET 8 found.");
+            Console.ResetColor();
+
             RunFushigi();
-        } catch
+        } else
         {
             static string TerminalURL(string url) => $"\u001B]8;;{url}\a{url}\u001B]8;;\a";
 
@@ -34,6 +38,7 @@ internal class Program
             Console.WriteLine("Please make sure you have .NET 8 installed. You can download it here:");
             Console.WriteLine(TerminalURL("https://dotnet.microsoft.com/en-us/download/dotnet/8.0"));
             Console.ResetColor();
+            Console.Read();
         }
     }
 
@@ -73,7 +78,7 @@ internal class Program
         Logger.CloseLogger();
     }
 
-    /*
+
     private static bool TestForNET8()
     {
         // Ask the .NET version
@@ -85,20 +90,35 @@ internal class Program
         cmd.StartInfo.UseShellExecute = false;
         cmd.Start();
 
-        cmd.StandardInput.WriteLine("dotnet --version");
+        cmd.StandardInput.WriteLine("dotnet --list-sdks");
         cmd.StandardInput.Flush();
         cmd.StandardInput.Close();
         cmd.WaitForExit();
-        string version = cmd.StandardOutput.ReadToEnd();
-        string verionNumber = version.Split("--version\r\n")[1].Split(".")[0];
+        string getVersion = cmd.StandardOutput.ReadToEnd();
 
-        if (verionNumber != "5")
+        string[] versions = getVersion.Split("--list-sdks\r\n")[1].Split("\r\n");
+
+        foreach (string version in versions)
         {
-            return false;
+            try
+            {
+                int verionNumber = Int32.Parse(version.Split(".")[0]);
+
+                if (verionNumber != 8)
+                {
+                    continue;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+
+            }
         }
-        else
-        {
-            return true;
-        }
-    }*/
+
+        return false;
+    }
 }
