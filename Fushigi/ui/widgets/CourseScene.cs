@@ -324,6 +324,9 @@ namespace Fushigi.ui.widgets
 
             SelectActorAndLayerPanel();
 
+            // Palette Editor Window. INCOMPLETE!
+            //var paletteWindow = new EnvPaletteWindow();
+
             backupTime += deltaSeconds;
             if (backupTime >= UserSettings.GetBackupFreqMinutes() * 60)
             {
@@ -356,6 +359,9 @@ namespace Fushigi.ui.widgets
                 var viewport = viewports[area];
 
                 ImGui.SetNextWindowDockID(0x100, ImGuiCond.Once);
+
+                //paletteWindow.Load(gl, area.mAreaParams, area.mInitEnvPalette);
+                //paletteWindow.Render();
 
                 if (ImGui.Begin(area.GetName(), ImGuiWindowFlags.NoNav))
                 {
@@ -517,9 +523,7 @@ namespace Fushigi.ui.widgets
                         ImGui.GetWindowDrawList().AddRectFilled(topLeft, topLeft + size, 0x44000000);
 
                     //Allow button press, align to top of the screen
-                    ImGui.SetCursorScreenPos(topLeft);
-
-                    ImGui.SameLine();
+                    ImGui.SetCursorScreenPos(topLeft + 16 * Vector2.One);
 
                     float fps = 1.0f / ImGui.GetIO().DeltaTime;
                     fps = (float)Math.Round(fps, 0);

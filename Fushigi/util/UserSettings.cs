@@ -31,7 +31,7 @@ namespace Fushigi.util
                 RomFSPath = "";
                 ModPaths = [];
                 RomFSModPath = "";
-                RecentCourses = new List<string>(MaxRecents);
+                RecentCourses = new List<string>(MaxRecents) { };
                 RenderCustomModels = false;
                 UseGameShaders = false;
                 UseAstcTextureCache = false;
@@ -44,7 +44,18 @@ namespace Fushigi.util
         {
             AppSettings = new Settings();
             if (File.Exists(SettingsFile))
-                AppSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(SettingsFile));
+            {
+                try
+                {
+                    AppSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(SettingsFile));
+                    AppSettings.RecentCourses = AppSettings.RecentCourses ?? new List<string>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"{e.GetType}: {e.Message}");
+                    Console.WriteLine("Creating new User Settings.");
+                }
+            }
         }
 
         public static void Save()
@@ -166,14 +177,13 @@ namespace Fushigi.util
 
         public static string? GetLatestCourse()
         {
-            int size = AppSettings.RecentCourses.Count;
-
-            if (size == 0)
+            //int size = AppSettings.RecentCourses.Count;
+            if (AppSettings.RecentCourses.Count == 0)
             {
                 return null;
             }
 
-            return AppSettings.RecentCourses[size - 1];
+            return AppSettings.RecentCourses.Last();
         }
     }
 }

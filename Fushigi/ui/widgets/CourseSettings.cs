@@ -208,14 +208,14 @@ namespace Fushigi.ui.widgets
                     ImGui.TableNextColumn();
                 }
 
-                // CourseThumbnailPath
+                // SuggestBadgeReplaceLabel
                 {
                     ImGui.Text("Suggested Badge Replacement Label");
                     ImGui.TableNextColumn();
 
                     var suggestBadgeReplaceLabel = courseInfo.SuggestBadgeReplaceLabel is null ? "" : courseInfo.SuggestBadgeReplaceLabel;
 
-                    if (ImGui.InputText("##CourseThumbnailPath", ref suggestBadgeReplaceLabel, 1024))
+                    if (ImGui.InputText("##SuggestBadgeReplaceLabel", ref suggestBadgeReplaceLabel, 1024))
                         courseInfo.SuggestBadgeReplaceLabel = suggestBadgeReplaceLabel;
                 }
 

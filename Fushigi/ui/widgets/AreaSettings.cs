@@ -262,7 +262,7 @@ namespace Fushigi.ui.widgets
             }
 
             ImGui.SeparatorText("Level Palettes");
-            var initPal = areaParam.EnvPaletteSetting.InitPaletteBaseName;
+            var initPal = areaParam.EnvPaletteSetting.InitPaletteBaseName ?? "";
             if (ImGui.TreeNode("Initial Palette"))
             {
                 if (ImGui.InputText("##InitialPalette", ref initPal, 1024))
@@ -406,7 +406,7 @@ namespace Fushigi.ui.widgets
                     int index = BgmTypes.Values.ToList().IndexOf(wonderBgmType);
                     if (index < 0) index = 0;
                     if (ImGui.Combo("##WonderBgmType", ref index, BgmTypes.Keys.ToArray(), BgmTypes.Count(), 10))
-                        areaParam.BgmType = BgmTypes.Values.ToArray()[index];
+                        areaParam.WonderBgmType = BgmTypes.Values.ToArray()[index];
 
                     ImGui.TableNextColumn();
 
