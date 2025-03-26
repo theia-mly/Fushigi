@@ -36,10 +36,7 @@ namespace Fushigi.course
 
             IsOneAreaCourse = ((BymlNode<string>)stageParamRoot["Category"]).Data == "Course1Area";
 
-            if (IsOneAreaCourse) {
-                mAreas.Add(new CourseArea(mCourseName));
-            }
-            else
+            try
             {
                 mStageReferences = (BymlArrayNode)root["RefStages"];
 
@@ -49,6 +46,10 @@ namespace Fushigi.course
                     string stageName = Path.GetFileName(stageParamPath).Split(".game")[0];
                     mAreas.Add(new CourseArea(stageName));
                 }
+            }
+            catch
+            {
+                mAreas.Add(new CourseArea(mCourseName));
             }
 
             if (root.ContainsKey("Links"))
