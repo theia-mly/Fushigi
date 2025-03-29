@@ -6,7 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon>res\icon1.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="res\icon1.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutomaticGraphLayout" Version="1.1.12" />
