@@ -91,7 +91,6 @@ namespace Fushigi.ui.widgets
             { "Break Time!: SMB Theme", "Course48" },
             { "Break Time!: SMB3 Enemy Ambush", "Course46" },
             { "Break Time!: Isle Delfino", "Course42" },
-            { "Break Time!: ", "Course47" },
             { "Coin Bonus Ship", "Course43" },
             { "AreaBGM", "AreaBGM" },
             { "Music Track 1", "MusicTrack01" },

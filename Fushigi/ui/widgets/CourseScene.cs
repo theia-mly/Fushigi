@@ -99,12 +99,15 @@ namespace Fushigi.ui.widgets
         ];
 
         public static readonly string[] LayerTypes = [
+            "None",
             "DvScreen",
             "DvNear2",
             "DvNear1",
             "DecoAreaFront",
-            "PlayArea", 
+            "BgFront",
+            "PlayArea",
             "DecoArea",
+            "DvPlayArea",
             "DvMiddle1",
             "DvMiddle2",
             "DvFar1",
@@ -123,6 +126,8 @@ namespace Fushigi.ui.widgets
             "DvScreen",
             "DvNear2",
             "DvNear1",
+            "BgFront",
+            "DvPlayArea",
             "DvMiddle1",
             "DvMiddle2",
             "DvFar1",

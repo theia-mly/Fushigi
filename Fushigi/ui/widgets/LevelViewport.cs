@@ -1437,13 +1437,22 @@ namespace Fushigi.ui.widgets
                             actor.mTranslation.Z
                         ); ;
 
+                    // Because fuck consistency I guess.
+                    // (It's mostly cause usually AreaObjs use a distance calculation "NoModel_1x1x1", meaning a centered block.
+                    //  While some use "SameActor" and "NoModel_1x1x1_Bottom" which place the origin at the bottom. I can't be bothered to
+                    //  get this info and since it's only a handful of actors afaik, I'll just hardcode them here. If you got an issue with this,
+                    //  feel free to change it.)
+                    string[] offsetExceptions = {
+                        "AdditionalCullingAabbArea",
+                        "AreaCommon",
+                        "AreaSwitchBase",
+                        "BackgroundAreaLocator"
+                    };
 
-                    if (actor.mType == CourseActorType.Area && actor.mActorPack?.ShapeParams == null)
+                    // Changed this cause it still wasn't correct
+                    if (actor.mType == CourseActorType.Area && actor.mActorPack?.ShapeParams == null 
+                        && !offsetExceptions.Contains(actor.mPackName))
                         off = new(0, .5f, 0);
-
-                    // Hard code the AdditionalCullingAabbArea because I have no idea where this is determined
-                    if (actor.mPackName == "AdditionalCullingAabbArea")
-                        off = new(0);
 
                     //topLeft
                     s_actorRectPolygon[0] = WorldToScreen(Vector3.Transform(new Vector3(min.X, max.Y, 0) + off, transform));
