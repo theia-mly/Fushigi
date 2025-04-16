@@ -493,9 +493,10 @@ namespace Fushigi.ui.widgets
                         if (ImguiHelper.DrawTextToggle(IconUtil.ICON_IMAGE, viewport.ShowBackground, icon_size))
                         {
                             viewport.ShowBackground = !viewport.ShowBackground;
-                            foreach (var layer in BackgroundLayerTypes)
+                            foreach (var layer in mLayersVisibility.Keys)
                             {
-                                mLayersVisibility[layer] = viewport.ShowBackground;
+                                if(BackgroundLayerTypes.Contains(layer))
+                                    mLayersVisibility[layer] = viewport.ShowBackground;
                             }
                         }
                         ImGui.SetItemTooltip("Hide/Show Background Layers");
